@@ -57,3 +57,17 @@ pnpm test
 ## Author
 
 Kyaw Zayar Win
+
+## To Do  
+
+- [ ] BUG: Freebies need to be actual free in the amount
+- [ ] BUG: Freebies need to be able to remove
+- [ ] BUG: Sub Total Amount shouldn't includes Freebies Amount.
+- [ ] BUG: Remove Discount by Name.
+- [ ] TODO: Support Multiple Discounts.
+- [ ] Enhancement: Get total price of each unique items in the cart to let user saw that how many freebies they get.
+- [ ] Enhancement: BuyX determine with quantity and getY with quantity, example, BuyX 5, GetY 2
+- [ ] Enhancement: TODO: Seperate back add and update to align with coding testing
+- [ ] Enhancement: Add id checking or do lastIndexes things when creating items to reduce the conflict
+- [ ] Enhancement: Add private or public typescript
+- [ ] Refactor: Align more with OOP concept
