@@ -1,4 +1,4 @@
-import Status from "./status";
+import Status from "../status";
 
 type FixedDiscountType = 'fixed'
 type PercentageDiscountType = 'percentage'

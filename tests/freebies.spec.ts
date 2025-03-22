@@ -1,5 +1,5 @@
-import { FreebiesCollection } from "../src/freebies.service";
-import { ProductCollection } from "../src/product.service";
+import { FreebiesCollection } from "../src/service/freebies.service";
+import { ProductCollection } from "../src/service/product.service";
 
 describe('Freebies', () => {
     const freebiesCollection = new FreebiesCollection()

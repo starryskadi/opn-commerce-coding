@@ -1,5 +1,5 @@
 import { type Product, ProductCollection } from "./product.service";
-import Status from "./status";
+import Status from "../status";
 
 class BuyXGetY {
     id: number

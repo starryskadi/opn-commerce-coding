@@ -1,7 +1,7 @@
 import { DiscountCollection, Discount, isFixedDiscount, isPercentageDiscount } from "./discount.service";
 import { FreebiesCollection } from "./freebies.service";
 import { ProductCollection, type Product } from "./product.service"
-import Status from "./status";
+import Status from "../status";
 
 let instance: Cart; 
 

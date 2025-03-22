@@ -1,4 +1,4 @@
-import { Product, ProductCollection } from "../src/product.service" 
+import { Product, ProductCollection } from "../src/service/product.service" 
 
 describe("Product", () => {
     const productCollection = new ProductCollection()

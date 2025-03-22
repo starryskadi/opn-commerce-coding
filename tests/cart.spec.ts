@@ -1,7 +1,7 @@
-import Cart from "../src/cart.service";
-import { DiscountCollection } from "../src/discount.service";
-import { FreebiesCollection } from "../src/freebies.service";
-import { ProductCollection } from "../src/product.service";
+import Cart from "../src/service/cart.service";
+import { DiscountCollection } from "../src/service/discount.service";
+import { FreebiesCollection } from "../src/service/freebies.service";
+import { ProductCollection } from "../src/service/product.service";
 
 describe("Cart", () => {
     const productCollection = new ProductCollection()

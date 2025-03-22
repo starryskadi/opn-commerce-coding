@@ -1,4 +1,4 @@
-import { isDevEnvironment, isTestingEnvironment } from "./utils";
+import { isDevEnvironment, isTestingEnvironment } from "./environment";
 
 type statusType = 'success'
 

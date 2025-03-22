@@ -1,4 +1,4 @@
-import { Discount, DiscountCollection, IDiscount } from "../src/discount.service"
+import { Discount, DiscountCollection, IDiscount } from "../src/service/discount.service"
 
 describe('Discount', () => {
     const discountCollection = new DiscountCollection()
