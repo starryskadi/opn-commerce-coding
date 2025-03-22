@@ -54,12 +54,17 @@ describe("Cart", () => {
     })
 
     it('Product can be added to cart via product id', () => {
+        const product = productCollection.getById({ id: 1});
+        
         cart.addOrUpdate({
-            id: productCollection.getById({ id: 1}).id,
+            id: product.id,
             quantity: 1
         })
 
-        expect(cart.getAll().length).toBe(1)
+        expect(cart.getById(product)).toEqual({
+            ...product,
+            quantity: 1
+        })
     })
 
 
@@ -223,9 +228,9 @@ describe("Cart", () => {
             cart.addOrUpdate(item)
         })
 
-        const uniqueItemsCount = cart.getTotalItemsCount()
+        const totalItemsCount = cart.getTotalItemsCount()
 
-        expect(uniqueItemsCount).toBe(7)
+        expect(totalItemsCount).toBe(7)
     })
 
     it('Can return the sub total amount of items in cart', () => {

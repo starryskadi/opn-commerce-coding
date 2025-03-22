@@ -1,4 +1,4 @@
-import { DiscountCollection } from "../src/discount.service"
+import { Discount, DiscountCollection, IDiscount } from "../src/discount.service"
 
 describe('Discount', () => {
     const discountCollection = new DiscountCollection()
@@ -36,7 +36,7 @@ describe('Discount', () => {
     })
 
     it('Multiple Discounts can be created', () => {
-        const response = discountCollection.addBulk([
+        const discounts: Discount[] = [
             {
                 name: "Discount 1",
                 amount: 50,
@@ -58,13 +58,17 @@ describe('Discount', () => {
                 type: 'percentage',
                 maxAmount: 500
             },
-        ])
+        ].map(each => {
+            return new Discount(each as IDiscount)
+        })
 
-        expect(response.collection.length).toBe(4);
+        const response = discountCollection.addBulk(discounts)
+
+        expect(response.collection).toEqual(discounts);
     })
 
     it('Get Discount', () => {
-        discountCollection.addBulk([
+        const discounts: Discount[] = [
             {
                 name: "Discount 1",
                 amount: 50,
@@ -86,7 +90,11 @@ describe('Discount', () => {
                 type: 'percentage',
                 maxAmount: 500
             },
-        ])
+        ].map(each => {
+            return new Discount(each as IDiscount)
+        })
+
+        discountCollection.addBulk(discounts)
 
         const response = discountCollection.get({
             name: "Discount 1"
@@ -96,7 +104,7 @@ describe('Discount', () => {
     })
 
     it('Discount can be deleted', () => {
-        discountCollection.addBulk([
+        const discounts: Discount[] = [
             {
                 name: "Discount 1",
                 amount: 50,
@@ -118,7 +126,9 @@ describe('Discount', () => {
                 type: 'percentage',
                 maxAmount: 500
             },
-        ])
+        ].map(each => {
+            return new Discount(each as IDiscount)
+        })
 
         discountCollection.remove({
             name: "Discount 3"

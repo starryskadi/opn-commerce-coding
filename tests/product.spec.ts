@@ -1,16 +1,18 @@
-import { ProductCollection } from "../src/product.service" 
+import { Product, ProductCollection } from "../src/product.service" 
 
 describe("Product", () => {
     const productCollection = new ProductCollection()
 
     it("Product can be created", () => {
-        productCollection.add({
+        const product = new Product({
             id: 1,
             name: 'Product 1',
             price: 50
         })
 
-        expect(productCollection.getAll().length).toBe(1)
+        productCollection.add(product)
+
+        expect(productCollection.getById(product).id).toBe(1)
     })
 
     it("Multiple products can be created", () => {
