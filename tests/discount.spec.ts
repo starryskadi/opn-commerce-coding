@@ -130,6 +130,8 @@ describe('Discount', () => {
             return new Discount(each as IDiscount)
         })
 
+        discountCollection.addBulk(discounts)
+
         discountCollection.remove({
             name: "Discount 3"
         })
