@@ -1,10 +1,10 @@
-import { Product } from "./product.service";
+import { type Product, ProductCollection } from "./product.service";
 import Status from "./status";
 
 class BuyXGetY {
     id: number
-    buyX: Product
-    getY: Product
+    buyX: Pick<Product, 'id'>
+    getY: Pick<Product, 'id'>
 
     constructor({ id, buyX, getY }: BuyXGetY) {
         this.id = id;
@@ -17,6 +17,7 @@ let instance: FreebiesCollection
 
 export class FreebiesCollection {
     private collection: BuyXGetY[] = []
+    private productCollection = new ProductCollection()
 
     constructor() {
         if (instance) return instance;
@@ -25,7 +26,14 @@ export class FreebiesCollection {
     }
 
     add(buyXGetY: BuyXGetY) {
-        this.collection.push(buyXGetY)
+        const buyX = this.productCollection.getById({ id: buyXGetY.buyX.id })
+        const getY = this.productCollection.getById({ id: buyXGetY.getY.id })
+
+        this.collection.push({
+            id: buyXGetY.id,
+            buyX,
+            getY
+        })
     }
 
     remove(buyXGetY: Pick<BuyXGetY, 'id'>) {
@@ -49,5 +57,21 @@ export class FreebiesCollection {
         return this.collection.filter((item) => {
             return item.buyX.id === buyX.id
         })
+    }
+
+    getById(buyXgetY: Pick<BuyXGetY, 'id'>) {
+        const item = this.collection.find((item => {
+            return item.id === buyXgetY.id
+        }))
+
+        if (!item) {
+            throw Error("Freebie not existed")
+        }
+
+        return item
+    }
+
+    destory() {
+        this.collection = []
     }
 }
