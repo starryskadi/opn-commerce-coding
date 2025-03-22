@@ -50,20 +50,14 @@ export class Discount {
         switch (discount.type) {
             case 'percentage':
                 if (discount.amount < 0 || discount.amount > 100) {
-                    throw new Status({ 
-                        type: 'error', 
-                        message: `Discount Type: Percentage must be within 1 and 100`
-                    })
+                    throw Error(`Discount Type: Percentage must be within 1 and 100`)
                 }
                 this.amount = discount.amount
                 this.maxAmount = discount.maxAmount
                 break
             case 'fixed':
                 if (discount.amount < 0) {
-                    throw new Status({ 
-                        type: 'error', 
-                        message: `Discount Type: Fixed can't be lower than 0`
-                    })
+                    throw Error(`Discount Type: Fixed can't be lower than 0`)
                 }
                 this.amount = discount.amount
                 this.maxAmount = discount.amount
@@ -88,7 +82,8 @@ export default class DiscountCollection {
     }
 
     add(discount: Discount) {
-        this.collection.push(discount)
+        const newDiscount = new Discount(discount as IDiscount)
+        this.collection.push(newDiscount)
 
         return {
             collection: this.collection, 
@@ -100,7 +95,10 @@ export default class DiscountCollection {
     }
 
      addBulk(discounts: Discount[]) {
-        this.collection = [...this.collection, ...discounts]
+        const newDiscounts = discounts.map(each => {
+            return new Discount(each as IDiscount)
+        })
+        this.collection = [...this.collection, ...newDiscounts]
 
         return {
             collection: this.collection,
@@ -113,27 +111,38 @@ export default class DiscountCollection {
 
     remove(discount: Pick<Discount, 'name'>) {
         const index = this.collection.findIndex(item => {
-            return item.name = discount.name
+            return item.name === discount.name
         })
 
         if (index < 0) {
-            throw new Status({
-                type: 'error', 
-                message: `Discount:${name} not existed`
-            })
+            throw Error(`Discount:${discount.name} not existed`)
         }
 
         this.collection.splice(index, 1)
         
         return new Status({
             type: 'success', 
-            message: `Successfully added Discount:${name}`
+            message: `Successfully added Discount:${discount.name}`
         })
     }
 
     get(discount: Pick<Discount, 'name'>) {
-        return this.collection.find(item => {
+        const item = this.collection.find(item => {
             return item.name === discount.name
         })
+
+        if (!item) {
+            throw Error("This Discount doesn't exist")
+        }
+
+        return item 
+    }
+
+    getAll() {
+        return this.collection
+    }
+
+    destory() {
+        this.collection = []
     }
 }

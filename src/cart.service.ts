@@ -83,10 +83,7 @@ export default class Cart {
         })
 
         if (index < 0) {
-            throw new Status({
-                type: 'error', 
-                message: `Removing Product:${product.id} not existed`
-            })
+            throw Error(`Removing Product:${product.id} not existed`)
         }
 
         this.items.splice(index, 1)

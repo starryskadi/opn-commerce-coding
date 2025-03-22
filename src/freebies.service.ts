@@ -34,10 +34,7 @@ export class FreebiesCollection {
         })
     
         if (index < 0) {
-            throw new Status({
-                type: 'error', 
-                message: `Removing BuyXGetY:${buyXGetY.id} not existed`
-            })
+            throw Error(`Removing BuyXGetY:${buyXGetY.id} not existed`)
         }
     
         this.collection.splice(index, 1)

@@ -1,4 +1,6 @@
-type statusType = 'success' | 'error'
+import { isDevEnvironment, isTestingEnvironment } from "./utils";
+
+type statusType = 'success'
 
 export default class Status {
     type: statusType;
@@ -8,6 +10,8 @@ export default class Status {
         this.type = type
         this.message = message
 
-        console.log(message)
+        if (!isTestingEnvironment() && isDevEnvironment()) {
+            console.log(this.message)
+        }
     }
 }

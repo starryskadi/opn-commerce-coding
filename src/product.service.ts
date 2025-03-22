@@ -25,7 +25,8 @@ export class ProductCollection {
     }
 
     add(product: Product) {
-        this.collection.push(product)
+        const newProduct = new Product(product)
+        this.collection.push(newProduct)
 
         return {
             collection: this.collection,
@@ -37,7 +38,10 @@ export class ProductCollection {
     }
 
     addBulk(products: Product[]) {
-        this.collection = [...this.collection, ...products]
+        const newProducts = products.map(product => {
+            return new Product(product)
+        })
+        this.collection = [...this.collection, ...newProducts]
 
         return {
             collection: this.collection,
@@ -54,10 +58,7 @@ export class ProductCollection {
         })
 
         if (index < 0) {
-            throw new Status({
-                type: 'error', 
-                message: `Removing Discount:${product.id} not existed`
-            })
+            throw Error(`Removing Discount:${product.id} not existed`)
         }
 
         this.collection.splice(index, 1)
@@ -74,10 +75,7 @@ export class ProductCollection {
         })
 
         if (!item) {
-            throw new Status({
-                type: 'error', 
-                message: "This product doesn't exist"
-            }) 
+            throw Error("This product doesn't exist")
         }
 
         return item 
