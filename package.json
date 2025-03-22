@@ -1,0 +1,18 @@
+{
+  "name": "commerce-cli",
+  "version": "1.0.0",
+  "main": "src/app.ts",
+  "scripts": {
+    "tsc": "tsc",
+    "watch": "tsc --watch",
+    "start": "npm run tsc && node dist/app.js",
+    "dev": "tsc-watch --onSuccess 'node dist/app.js'"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "typescript": "^5.8.2",
+    "tsc-watch": "^6.2.1"
+  }
+}
