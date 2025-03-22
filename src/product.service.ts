@@ -16,7 +16,7 @@ export class Product {
 let instance: ProductCollection 
 
 export class ProductCollection {
-    collection: Product[] = []
+    private collection: Product[] = []
 
     constructor() {
         if (instance) return instance
@@ -81,5 +81,13 @@ export class ProductCollection {
         }
 
         return item 
+    }
+
+    getAll() {
+        return this.collection
+    }
+
+    destory() {
+        this.collection = []
     }
 }

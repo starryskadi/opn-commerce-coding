@@ -13,10 +13,10 @@ class BuyXGetY {
     }
 }
 
-let instance: Freebies
+let instance: FreebiesCollection
 
-export class Freebies {
-    collection: BuyXGetY[] = []
+export class FreebiesCollection {
+    private collection: BuyXGetY[] = []
 
     constructor() {
         if (instance) return instance;

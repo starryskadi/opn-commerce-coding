@@ -79,7 +79,7 @@ let instance: DiscountCollection;
 
 // Singleton to make sure that there is only discount collection
 export default class DiscountCollection {
-    collection: Discount[] = []
+    private collection: Discount[] = []
     
     constructor() {
         if (instance) return instance

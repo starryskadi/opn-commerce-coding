@@ -1,5 +1,5 @@
 import DiscountCollection, { Discount, isFixedDiscount, isPercentageDiscount } from "./discount.service";
-import { Freebies } from "./freebies.service";
+import { FreebiesCollection } from "./freebies.service";
 import { ProductCollection, type Product } from "./product.service"
 import Status from "./status";
 
@@ -9,11 +9,11 @@ type CartItem = Product & { quantity: number }
 
 // Singleton to make sure that there is only one cart for the whole app
 export default class Cart {
-    items: CartItem[] = []
-    productCollection: ProductCollection = new ProductCollection()
-    discountCollection: DiscountCollection = new DiscountCollection()
-    freeBiesCollection: Freebies = new Freebies()
-    appliedDiscount: Discount | undefined
+    private items: CartItem[] = []
+    private productCollection: ProductCollection = new ProductCollection()
+    private discountCollection: DiscountCollection = new DiscountCollection()
+    private freeBiesCollection: FreebiesCollection = new FreebiesCollection()
+    private appliedDiscount: Discount | undefined
 
     // Cart can be created
     constructor() {
@@ -53,7 +53,7 @@ export default class Cart {
             return item.id === updatedItem.id
         })
 
-        if (existedItemIndex > 0) {
+        if (existedItemIndex > -1) {
             this.items[existedItemIndex] = {
                 ...this.items[existedItemIndex],
                 quantity: product.quantity
@@ -102,6 +102,12 @@ export default class Cart {
         return this.items;
     }
 
+    getById(product: Pick<Product, 'id'>) {
+        return this.items.find((item) => {
+            return item.id === product.id
+        })
+    }
+
     // Can count number of unique items in cart
     getUniqueCounts () {
         return new Set(this.items).size
@@ -121,6 +127,14 @@ export default class Cart {
 
     applyDiscount(discount: Pick<Discount, 'name'>){
         this.appliedDiscount = this.discountCollection.get(discount)
+    }
+
+    removeDiscount() {
+        this.appliedDiscount = undefined
+    }
+
+    getAppliedDiscount() {
+        return this.appliedDiscount
     }
 
     getTotalAmount() {
