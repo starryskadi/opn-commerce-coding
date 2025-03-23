@@ -8,17 +8,14 @@ describe('Freebies', () => {
     beforeAll(() => {
         productCollection.addBulk([
             {
-                id: 1, 
                 name: 'Product 1',
                 price: 50
-            }, 
+            },      
             {
-                id: 2, 
                 name: 'Product 2',
                 price: 150
             }, 
             {
-                id: 3, 
                 name: 'Product 3',
                 price: 250
             }, 
@@ -27,7 +24,6 @@ describe('Freebies', () => {
 
     it('Freebies can be created', () => {
         const freebie = {
-            id: 1, 
             buyX: {
                 id: 1
             },
@@ -43,7 +39,7 @@ describe('Freebies', () => {
 
         expect(freebiesCollection.getById({
             id: 1
-        })?.id).toEqual(freebie.id)
+        })?.id).toEqual(1)
     })
     
     it('Get All Freebies by Product id', () => {

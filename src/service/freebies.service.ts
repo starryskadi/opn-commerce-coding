@@ -90,8 +90,14 @@ export class FreebiesCollection implements IFreebiesCollection {
     private collection: BuyXGetY[] = []
     private productCollection = ProductCollection.getInstance()
     private static instance: FreebiesCollection
+    private lastIndex = 0
 
     private constructor() {}
+
+    private Id() {
+        this.lastIndex++
+        return this.lastIndex
+    }
 
     public static getInstance() {
         if (!this.instance) {
@@ -101,7 +107,7 @@ export class FreebiesCollection implements IFreebiesCollection {
         return this.instance
     }
 
-    public add(buyXGetY: IBuyXGetY) {
+    public add(buyXGetY: Omit<IBuyXGetY, 'id'>) {
         const buyX = this.productCollection.getById({ id: buyXGetY.buyX.id })
         const getY = this.productCollection.getById({ id: buyXGetY.getY.id })
 
@@ -109,6 +115,7 @@ export class FreebiesCollection implements IFreebiesCollection {
             ...buyXGetY,
             buyX: { id: buyX.id },
             getY: { id: getY.id },
+            id: this.Id()
         })
 
         this.collection.push(newBuyXGetY)
@@ -151,5 +158,6 @@ export class FreebiesCollection implements IFreebiesCollection {
 
     public destory() {
         this.collection = []
+        this.lastIndex = 0
     }
 }

@@ -103,7 +103,9 @@ Kyaw Zayar Win
 - [x] TODO: Support Multiple Discounts.
 - [x] Enhancement: BuyX determine with quantity and getY with quantity, example, BuyX 5, GetY 2
 - [x] Enhancement: TODO: Seperate back add and update to align with coding testing
-- [ ] Enhancement: Add id checking or do lastIndexes things when creating items to reduce the id conflict
+- [x] Enhancement: Add id checking or do lastIndexes things when creating items to reduce the id conflict
 - [x] Enhancement: Add private or public typescript
 - [x] Refactor: Align more with OOP concept
+
+## Backlog
 - [ ] Enhancement: Support Independent Discounts

@@ -18,17 +18,14 @@ describe("Product", () => {
     it("Multiple products can be created", () => {
         productCollection.addBulk([
             {
-                id: 1, 
-                name: 'Product 1',
+                name: 'Product 1',  
                 price: 50
             }, 
             {
-                id: 2, 
                 name: 'Product 2',
                 price: 150
             }, 
             {
-                id: 3, 
                 name: 'Product 3',
                 price: 250
             }, 
@@ -42,17 +39,14 @@ describe("Product", () => {
     it("Get a product by id", () => {
         productCollection.addBulk([
             {
-                id: 1, 
                 name: 'Product 1',
                 price: 50
             }, 
             {
-                id: 2, 
                 name: 'Product 2',
                 price: 150
             }, 
             {
-                id: 3, 
                 name: 'Product 3',
                 price: 250
             }, 
@@ -66,17 +60,14 @@ describe("Product", () => {
     it("Can remove a product", () => {
         productCollection.addBulk([
             {
-                id: 1, 
                 name: 'Product 1',
                 price: 50
             }, 
             {
-                id: 2, 
                 name: 'Product 2',
                 price: 150
             }, 
             {
-                id: 3, 
                 name: 'Product 3',
                 price: 250
             }, 

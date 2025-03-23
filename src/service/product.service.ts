@@ -53,8 +53,14 @@ interface IProductCollection {
 export class ProductCollection implements IProductCollection {
     static instance: ProductCollection
     private collection: Product[] = []
+    private lastIndex = 0
 
     private constructor() {}
+
+    private Id() {
+        this.lastIndex++
+        return this.lastIndex
+    }
 
     public static getInstance() {
         if (!this.instance) {
@@ -64,16 +70,16 @@ export class ProductCollection implements IProductCollection {
         return this.instance
     }
 
-    public add(product: IProduct) {
-        const newProduct = new Product(product)
+    public add(product: Omit<IProduct, 'id'>) {
+        const newProduct = new Product({...product, id: this.Id()})
         this.collection.push(newProduct)
 
         return newProduct
     }
 
-    public addBulk(products: IProduct[]) {
+    public addBulk(products: Omit<IProduct, 'id'>[]) {
         const newProducts = products.map(product => {
-            return new Product(product)
+            return new Product({...product, id: this.Id()})
         })
         this.collection = [...this.collection, ...newProducts]
 
@@ -112,5 +118,6 @@ export class ProductCollection implements IProductCollection {
 
     public destory() {
         this.collection = []
+        this.lastIndex = 0
     }
 }
