@@ -7,8 +7,8 @@
 
 1. Clone the repository:
 ```bash
-git clone [your-repository-url]
-cd commerce-cli
+git clone https://github.com/starryskadi/opn-commerce-coding
+cd opn-commerce-coding
 ```
 
 2. Install dependencies:
@@ -21,27 +21,8 @@ or
 ```bash
 npm install
 ```
-
-## Project Structure
-
-```
-├── src/
-│   ├── app.ts              # Main application entry point
-│   ├── cart.service.ts     # Cart management
-│   ├── discount.service.ts # Discounts
-│   ├── freebies.service.ts # Freebies
-│   ├── product.service.ts  # Products
-│   ├── status.ts           # Status
-│   └── utils.ts            # Utility functions
-├── tests/                  # Test files
-├── dist/                  
-└── package.json           
-```
-
 ## Available Scripts
 
-- `pnpm start`: Compile TypeScript and run the application
-- `pnpm dev`: Run the application in development mode with hot-reload
 - `pnpm test`: Run Jest tests
 - `pnpm tsc`: Compile TypeScript files
 - `pnpm watch`: Watch for TypeScript file changes
@@ -52,6 +33,27 @@ Tests are written using Jest. Run the test suite with:
 
 ```bash
 pnpm test
+```
+
+## Project Structure
+
+```
+└── 📁src
+    └── 📁service
+        └── cart.service.ts     
+        └── discount.service.ts
+        └── events.service.ts
+        └── freebies.service.ts
+        └── product.service.ts
+    └── app.ts
+    └── environment.ts
+└── 📁tests
+    └── cart.spec.ts
+    └── discount.spec.ts
+    └── freebies.spec.ts
+    └── product.spec.ts         
+├── dist/                  
+└── package.json           
 ```
 
 ## Features
@@ -109,3 +111,4 @@ Kyaw Zayar Win
 
 ## Backlog
 - [ ] Enhancement: Support Independent Discounts
+- [ ] Write the full commandline application with commander.js
