@@ -101,9 +101,9 @@ Kyaw Zayar Win
 - [x] BUG: Sub Total Amount shouldn't includes Freebies Amount.
 - [x] BUG: Remove Discount by Name.
 - [x] TODO: Support Multiple Discounts.
-- [ ] Enhancement: Get total price of each unique items in the cart to let user saw that how many freebies they get.
 - [x] Enhancement: BuyX determine with quantity and getY with quantity, example, BuyX 5, GetY 2
 - [x] Enhancement: TODO: Seperate back add and update to align with coding testing
 - [ ] Enhancement: Add id checking or do lastIndexes things when creating items to reduce the conflict
-- [ ] Enhancement: Add private or public typescript
+- [x] Enhancement: Add private or public typescript
 - [ ] Refactor: Align more with OOP concept
+- [ ] Enhancement: Support Independent Discounts

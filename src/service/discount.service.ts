@@ -81,7 +81,7 @@ export class DiscountCollection {
         instance = this
     }
 
-    add(discount: Discount) {
+    public add(discount: Discount) {
         const newDiscount = new Discount(discount as IDiscount)
         this.collection.push(newDiscount)
 
@@ -94,7 +94,7 @@ export class DiscountCollection {
         }
     }
 
-     addBulk(discounts: Discount[]) {
+    public addBulk(discounts: Discount[]) {
         const newDiscounts = discounts.map(each => {
             return new Discount(each as IDiscount)
         })
@@ -109,7 +109,7 @@ export class DiscountCollection {
         }
     }
 
-    remove(discount: Pick<Discount, 'name'>) {
+    public remove(discount: Pick<Discount, 'name'>) {
         const index = this.collection.findIndex(item => {
             return item.name === discount.name
         })
@@ -126,7 +126,7 @@ export class DiscountCollection {
         })
     }
 
-    get(discount: Pick<Discount, 'name'>) {
+    public get(discount: Pick<Discount, 'name'>) {
         const item = this.collection.find(item => {
             return item.name === discount.name
         })
@@ -138,11 +138,11 @@ export class DiscountCollection {
         return item 
     }
 
-    getAll() {
+    public getAll() {
         return this.collection
     }
 
-    destory() {
+    public destory() {
         this.collection = []
     }
 }

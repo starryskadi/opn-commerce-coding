@@ -33,7 +33,7 @@ export class FreebiesCollection {
         instance = this
     }
 
-    add(buyXGetY: BuyXGetY) {
+    public add(buyXGetY: BuyXGetY) {
         const buyX = this.productCollection.getById({ id: buyXGetY.buyX.id })
         const getY = this.productCollection.getById({ id: buyXGetY.getY.id })
 
@@ -44,7 +44,7 @@ export class FreebiesCollection {
         })
     }
 
-    remove(buyXGetY: Pick<BuyXGetY, 'id'>) {
+    public remove(buyXGetY: Pick<BuyXGetY, 'id'>) {
         const index = this.collection.findIndex((item) => {
             return item.id === buyXGetY.id
         })
@@ -61,13 +61,13 @@ export class FreebiesCollection {
         })
     }
 
-    getAllByBuyX(buyX: Pick<Product, 'id'>) {
+    public getAllByBuyX(buyX: Pick<Product, 'id'>) {
         return this.collection.filter((item) => {
             return item.buyX.id === buyX.id
         })
     }
 
-    getById(buyXgetY: Pick<BuyXGetY, 'id'>) {
+    public getById(buyXgetY: Pick<BuyXGetY, 'id'>) {
         const item = this.collection.find((item => {
             return item.id === buyXgetY.id
         }))
@@ -79,7 +79,7 @@ export class FreebiesCollection {
         return item
     }
 
-    destory() {
+    public destory() {
         this.collection = []
     }
 }

@@ -32,7 +32,7 @@ export default class Cart {
     }
 
     // Cart can be destroy 
-    destory() {
+    public destory() {
         // Assuming "Cart can be destroyed" means removing all items
         this.items = [];
         this.appliedDiscounts = []
@@ -40,18 +40,18 @@ export default class Cart {
     }
 
     // Can check if product already exists
-    isItemExist(product: Pick<Product, 'id'>) {
+    public isItemExist(product: Pick<Product, 'id'>) {
         return this.items.findIndex((item) => {
             return item.id === product.id
         }) > -1
     }
 
     // Can check if cart is empty
-    isEmpty() {
+    public isEmpty() {
         return !this.items.length
     }
 
-    add(product: Pick<CartItem, 'id'>, options?: CartItemActionOption) {
+    public add(product: Pick<CartItem, 'id'>, options?: CartItemActionOption) {
         const item = this.productCollection.getById(product)
         this.items.push({
             ...item,
@@ -64,7 +64,8 @@ export default class Cart {
         }
     }
 
-    addWithQuantity(product: Pick<CartItem, 'id' | 'quantity'>, options?: CartItemActionOption) {
+    // Set to private first as it's only used in cart service
+    private addWithQuantity(product: Pick<CartItem, 'id' | 'quantity'>, options?: CartItemActionOption) {
         const item = this.productCollection.getById(product)
         this.items.push({
             ...item,
@@ -77,7 +78,7 @@ export default class Cart {
         }
     }
 
-    update(product: Pick<CartItem, 'id' | 'quantity'>, options?: CartItemActionOption) {
+    public update(product: Pick<CartItem, 'id' | 'quantity'>, options?: CartItemActionOption) {
         if (product.quantity < 0) {
             throw new Error(`Product:${product.id} quantity cannot be negative`)
         }
@@ -101,7 +102,8 @@ export default class Cart {
         }
     }
 
-    updateByRelative(product: Pick<CartItem, 'id' | 'quantity'>, options: CartItemActionOption) {
+    // Set to private first as it's only used in cart service
+    private updateByRelative(product: Pick<CartItem, 'id' | 'quantity'>, options: CartItemActionOption) {
         const existedItemIndex = this.items.findIndex((item) => {
             return item.id === product.id
         })
@@ -128,7 +130,7 @@ export default class Cart {
         }
     }
 
-    addOrUpdateByRelative(product: Pick<CartItem, 'id' | 'quantity'>, options: CartItemActionOption) {
+    public addOrUpdateByRelative(product: Pick<CartItem, 'id' | 'quantity'>, options: CartItemActionOption) {
        try {
             this.updateByRelative(product, options)
        } catch (error) {
@@ -136,7 +138,7 @@ export default class Cart {
        }
     }
 
-    onCartUpdated() {
+    private onCartUpdated() {
         // Handle freebies changes when items are updated
         this.items.map(item => {
             const freeItems = this.freeBiesCollection.getAllByBuyX({ id: item.id })
@@ -218,7 +220,7 @@ export default class Cart {
     }
 
     // Product can be remove from cart via product id
-    remove(product: Pick<Product, 'id'>) {
+    public remove(product: Pick<Product, 'id'>) {
         const index = this.items.findIndex((item) => {
             return item.id === product.id
         })
@@ -238,22 +240,22 @@ export default class Cart {
      } 
     // Can list
     //  all items in cart
-    getAll () {
+    public getAll () {
         return this.items;
     }
 
-    getById(product: Pick<Product, 'id'>) {
+    public getById(product: Pick<Product, 'id'>) {
         return this.items.find((item) => {
             return item.id === product.id
         })
     }
 
     // Can count number of unique items in cart
-    getUniqueCounts () {
+    public getUniqueCounts () {
         return new Set(this.items).size
     }
     
-    getSubTotalAmount()  {
+    public getSubTotalAmount()  {
         const subTotal = this.items.reduce((prev, cur) => {
             const actualQuantity = cur.freeQuantity ? cur.quantity - cur.freeQuantity : cur.quantity
             return prev + (actualQuantity * cur.price)
@@ -262,25 +264,25 @@ export default class Cart {
         return subTotal
     }
 
-    getTotalItemsCount() {
+    public getTotalItemsCount() {
         return this.items.reduce((prev, cur) => {
             return prev + cur.quantity
         }, 0)
     }
 
-    applyDiscount(discount: Pick<Discount, 'name'>){
+    public applyDiscount(discount: Pick<Discount, 'name'>){
         this.appliedDiscounts.push(this.discountCollection.get(discount))
     }
 
-    removeDiscount(discount: Pick<Discount, 'name'>) {
+    public removeDiscount(discount: Pick<Discount, 'name'>) {
         this.appliedDiscounts = this.appliedDiscounts.filter(d => d.name !== discount.name)
     }
 
-    getAppliedDiscount() {
+    public getAppliedDiscount() {
         return this.appliedDiscounts
     }
 
-    getTotalAmount() {
+    public getTotalAmount() {
         let totalAmount = this.getSubTotalAmount() 
 
         if (this.appliedDiscounts.length) {

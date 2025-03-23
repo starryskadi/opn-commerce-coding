@@ -24,7 +24,7 @@ export class ProductCollection {
         instance = this
     }
 
-    add(product: Product) {
+    public add(product: Product) {
         const newProduct = new Product(product)
         this.collection.push(newProduct)
 
@@ -37,7 +37,7 @@ export class ProductCollection {
         }
     }
 
-    addBulk(products: Product[]) {
+    public addBulk(products: Product[]) {
         const newProducts = products.map(product => {
             return new Product(product)
         })
@@ -52,7 +52,7 @@ export class ProductCollection {
         }
     }
 
-    remove(product: Pick<Product, 'id'>) {
+    public remove(product: Pick<Product, 'id'>) {
         const index = this.collection.findIndex((item) => {
             return item.id === product.id
         })
@@ -69,7 +69,7 @@ export class ProductCollection {
         })
     } 
 
-    getById(product: Pick<Product, 'id'>)  {
+    public getById(product: Pick<Product, 'id'>)  {
         const item = this.collection.find((item) => {
             return item.id === product.id
         })
@@ -81,11 +81,11 @@ export class ProductCollection {
         return item 
     }
 
-    getAll() {
+    public getAll() {
         return this.collection
     }
 
-    destory() {
+    public destory() {
         this.collection = []
     }
 }
