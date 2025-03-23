@@ -19,7 +19,7 @@ export default class Cart {
     private productCollection: ProductCollection = new ProductCollection()
     private discountCollection: DiscountCollection = new DiscountCollection()
     private freeBiesCollection: FreebiesCollection = new FreebiesCollection()
-    private appliedDiscount: Discount | undefined
+    private appliedDiscounts: Discount[] = []
     private prevItems: CartItem[] = []
 
     // Cart can be created
@@ -35,6 +35,8 @@ export default class Cart {
     destory() {
         // Assuming "Cart can be destroyed" means removing all items
         this.items = [];
+        this.appliedDiscounts = []
+        this.prevItems = []
     }
 
     // Can check if product already exists
@@ -76,6 +78,10 @@ export default class Cart {
     }
 
     update(product: Pick<CartItem, 'id' | 'quantity'>, options?: CartItemActionOption) {
+        if (product.quantity < 0) {
+            throw new Error(`Product:${product.id} quantity cannot be negative`)
+        }
+
         const existedItemIndex = this.items.findIndex((item) => {
             return item.id === product.id
         })
@@ -103,10 +109,17 @@ export default class Cart {
         if (existedItemIndex < 0) {
             throw new Error(`Product:${product.id} not existed. Add product first`)
         } else {
+            let updatedQuantity = this.items[existedItemIndex].quantity + product.quantity
+            let updatedFreeQuantity = options.isFree ? this.items[existedItemIndex].freeQuantity + product.quantity : this.items[existedItemIndex].freeQuantity
+
+            if (updatedQuantity < 0) {
+                throw new Error(`Product:${product.id} quantity cannot be negative`)
+            }
+
             this.items[existedItemIndex] = {
                 ...this.items[existedItemIndex],
-                quantity: this.items[existedItemIndex].quantity + product.quantity,
-                freeQuantity: options.isFree ? this.items[existedItemIndex].freeQuantity + product.quantity : this.items[existedItemIndex].freeQuantity
+                quantity: updatedQuantity,
+                freeQuantity: updatedFreeQuantity
             }
         }
 
@@ -256,33 +269,35 @@ export default class Cart {
     }
 
     applyDiscount(discount: Pick<Discount, 'name'>){
-        this.appliedDiscount = this.discountCollection.get(discount)
+        this.appliedDiscounts.push(this.discountCollection.get(discount))
     }
 
-    removeDiscount() {
-        this.appliedDiscount = undefined
+    removeDiscount(discount: Pick<Discount, 'name'>) {
+        this.appliedDiscounts = this.appliedDiscounts.filter(d => d.name !== discount.name)
     }
 
     getAppliedDiscount() {
-        return this.appliedDiscount
+        return this.appliedDiscounts
     }
 
     getTotalAmount() {
         let totalAmount = this.getSubTotalAmount() 
 
-        if (this.appliedDiscount) {
-           if (isFixedDiscount(this.appliedDiscount)) {
-                totalAmount -= this.appliedDiscount.amount
-           } else if (isPercentageDiscount(this.appliedDiscount)) {
-                const discountedAmount = (totalAmount * this.appliedDiscount.amount) / 100
+        if (this.appliedDiscounts.length) {
+           this.appliedDiscounts.map(discount => {
+                if (isFixedDiscount(discount)) {
+                    totalAmount -= discount.amount
+                } else if (isPercentageDiscount(discount)) {
+                    const discountedAmount = (totalAmount * discount.amount) / 100
 
-                if (this.appliedDiscount.maxAmount) {
-                    totalAmount -= Math.min(discountedAmount, this.appliedDiscount.maxAmount)
-                } 
-                else {
-                    totalAmount -= discountedAmount
-                }  
-           }               
+                    if (discount.maxAmount) {
+                        totalAmount -= Math.min(discountedAmount, discount.maxAmount)
+                    } 
+                    else {
+                        totalAmount -= discountedAmount
+                    }  
+                }
+           })
         } 
 
         if (totalAmount < 0) {

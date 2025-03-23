@@ -72,6 +72,7 @@ pnpm test
 - Automatic updates when cart contents change
 - Automatic freebie application and removal based on cart contents
 
+
 ### Discounts
 - Two discount types: Fixed and Percentage
   - Fixed: Apply a specific amount discount
@@ -79,6 +80,7 @@ pnpm test
 - Apply discounts to the cart total
 - Remove applied discounts
 - Support for discount management (add, retrieve, remove)
+- Support multiple discounts to apply (used stacked order discount method)
 
 ### Freebies (Buy X Get Y)
 - Configure "Buy X Get Y" promotions where purchasing one product grants free units of another
@@ -97,8 +99,8 @@ Kyaw Zayar Win
 - [x] BUG: Freebies need to be actual free in the amount
 - [x] BUG: Freebies need to be able to remove
 - [x] BUG: Sub Total Amount shouldn't includes Freebies Amount.
-- [ ] BUG: Remove Discount by Name.
-- [ ] TODO: Support Multiple Discounts.
+- [x] BUG: Remove Discount by Name.
+- [x] TODO: Support Multiple Discounts.
 - [ ] Enhancement: Get total price of each unique items in the cart to let user saw that how many freebies they get.
 - [x] Enhancement: BuyX determine with quantity and getY with quantity, example, BuyX 5, GetY 2
 - [x] Enhancement: TODO: Seperate back add and update to align with coding testing

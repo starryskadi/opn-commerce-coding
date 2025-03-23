@@ -112,6 +112,37 @@ describe("Cart", () => {
         ])
     })
 
+
+    it('Non-existed Product must not be able to add to cart', () => {
+        expect(() => cart.add({
+            id: 10,
+        })).toThrow()
+    })
+
+    it('Non-existed Product must not be able to update', () => {
+        expect(() => cart.update({
+            id: 10,
+            quantity: 50
+        })).toThrow()
+    })
+
+    it('Non-existed Product must not be able to delete', () => {
+        expect(() => cart.remove({
+            id: 10,
+        })).toThrow()
+    })
+
+    it('Product should not be able to updated with negative quantity', () => {
+        cart.add({
+            id: productCollection.getById({ id: 1 }).id,
+        })
+
+        expect(() => cart.update({
+            id: 1,
+            quantity: -10
+        })).toThrow()
+    })
+
     it('Can check if product already exists', () => {
         cart.add({
             id: productCollection.getById({ id: 1}).id,
@@ -380,6 +411,27 @@ describe("Cart", () => {
         expect(totalAmount).toBe(1200)
     })
 
+    it('Can apply fixed discount that exceed than cart value and get discounted total amount should be zero rather than negative value', () => {
+        const toAddItems = [
+            {
+                id: productCollection.getById({ id: 1 }).id,
+                quantity: 1
+            },
+        ]
+
+        toAddItems.map(item => {
+            cart.add(item)
+        })
+
+        cart.applyDiscount({
+            name: "Discount 2"
+        })
+
+        const totalAmount = cart.getTotalAmount()
+
+        expect(totalAmount).toBe(0)
+    })
+
     it('Can apply percentage discount (100%) with max value (500) and get discounted total amount', () => {
         const toAddItems = [
             {
@@ -446,11 +498,79 @@ describe("Cart", () => {
 
         expect(totalAmount).toBe(725)
     })
+    
+    it('Can apply multiple discounts (50% and 250) and get discounted total amount', () => {
+        const toAddItems = [
+            {
+                id: productCollection.getById({ id: 3 }).id,
+                quantity: 100
+            }
+        ]
+
+        toAddItems.map(item => {
+            cart.add(item)
+            cart.update({
+                id: item.id,
+                quantity: item.quantity
+            })
+        })
+
+        cart.applyDiscount({
+            name: "Discount 1"
+        }) 
+
+        cart.applyDiscount({
+            name: "Discount 2"
+        })
+        
+        const totalAmount = cart.getTotalAmount()
+
+        expect(totalAmount).toBe(12250)
+    })
+
+    it('Can apply multiple discounts (50% and 250) and remove one discount (250), and get discounted total amount', () => {
+        const toAddItems = [
+            {
+                id: productCollection.getById({ id: 3 }).id,
+                quantity: 100
+            }
+        ]
+
+        toAddItems.map(item => {
+            cart.add(item)
+            cart.update({
+                id: item.id,
+                quantity: item.quantity
+            })
+        })
+
+        cart.applyDiscount({
+            name: "Discount 1"
+        }) 
+
+        cart.applyDiscount({
+            name: "Discount 2"
+        })
+
+        cart.removeDiscount({
+            name: "Discount 2"
+        })
+        
+        const totalAmount = cart.getTotalAmount()
+
+        expect(totalAmount).toBe(12500)
+    })
 
     it('Discount can be removed from cart', () => {
-        cart.removeDiscount()
+        cart.applyDiscount({
+            name: "Discount 1"
+        })
+
+        cart.removeDiscount({
+            name: "Discount 1"
+        })
         
-        expect(cart.getAppliedDiscount()).toBe(undefined)
+        expect(cart.getAppliedDiscount()).toEqual([])
     })
 
     it("Cart can be destoryed", () => {
@@ -485,60 +605,6 @@ describe("Cart", () => {
     it("Cart is Empty", () => {
         expect(cart.isEmpty()).toBe(true)
     })
-
-
-    //#endregion Positive Cases
-
-    //#region Negative Cases
-
-    it('Non-existed Product must not be able to add to cart', () => {
-        expect(() => cart.add({
-            id: 10,
-        })).toThrow()
-    })
-
-    it('Non-existed Product must not be able to update', () => {
-        expect(() => cart.update({
-            id: 10,
-            quantity: 50
-        })).toThrow()
-    })
-
-    it('Non-existed Product must not be able to delete', () => {
-        expect(() => cart.remove({
-            id: 10,
-        })).toThrow()
-    })
-
-    it('Product should not be able to updated with negative quantity', () => {
-        expect(() => cart.update({
-            id: 1,
-            quantity: -10
-        })).toThrow()
-    })
-
-    it('Can apply fixed discount that exceed than cart value and get discounted total amount should be zero rather than negative value', () => {
-        const toAddItems = [
-            {
-                id: productCollection.getById({ id: 1 }).id,
-                quantity: 1
-            },
-        ]
-
-        toAddItems.map(item => {
-            cart.add(item)
-        })
-
-        cart.applyDiscount({
-            name: "Discount 2"
-        })
-
-        const totalAmount = cart.getTotalAmount()
-
-        expect(totalAmount).toBe(0)
-    })
-
-    //#endregion Negative Cases
 
     afterEach(() => {
         cart.destory()
