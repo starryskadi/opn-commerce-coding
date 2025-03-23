@@ -4,6 +4,7 @@ type PercentageDiscountType = 'percentage'
 type DiscountType = FixedDiscountType | PercentageDiscountType
 
 interface IBaseDiscount {
+    id: number;
     name: string;
     type: DiscountType;
 }
@@ -19,8 +20,9 @@ interface IPercentageDiscount extends IBaseDiscount {
     maxAmount?: number; // max amount is the cap for the percentage
 }
 
-
 export type IDiscount = IFixedDiscount | IPercentageDiscount ;
+
+export type IDiscountWithoutId = Omit<IFixedDiscount, 'id'> | Omit<IPercentageDiscount, 'id'>;
 
 /**
  * @param maxAmount 
@@ -28,12 +30,14 @@ export type IDiscount = IFixedDiscount | IPercentageDiscount ;
  * If the discount type is percentage, the max amount is the provided value
  */
 export class Discount implements IBaseDiscount {
+    private _id: number;
     private _name: string;
     private _type: DiscountType;
     private _amount?: number;
     private _maxAmount?: number;
 
     constructor(discount: IDiscount) {
+        this._id = discount.id
         this._name = discount.name
         this._type = discount.type
 
@@ -55,6 +59,10 @@ export class Discount implements IBaseDiscount {
             default:
                 break
         }
+    }
+
+    get id() {
+        return this._id
     }
 
     get name() {
@@ -114,7 +122,7 @@ interface IDiscountCollection {
 export class DiscountCollection implements IDiscountCollection {
     private static instance: DiscountCollection
     private collection: Discount[] = []
-    
+    private lastIndex = 0
     private constructor() {}
 
     public static getInstance() {
@@ -125,16 +133,21 @@ export class DiscountCollection implements IDiscountCollection {
         return this.instance
     }
 
-    public add(discount: IDiscount) {
-        const newDiscount = new Discount(discount)
+    private Id() {
+        this.lastIndex++
+        return this.lastIndex
+    }
+
+    public add(discount: IDiscountWithoutId) {
+        const newDiscount = new Discount({...discount, id: this.Id()})
         this.collection.push(newDiscount)
 
         return newDiscount
     }
 
-    public addBulk(discounts: IDiscount[]) {
+    public addBulk(discounts: IDiscountWithoutId[]) {
         const newDiscounts = discounts.map(each => {
-            return new Discount(each)
+            return new Discount({...each, id: this.Id()})
         })
         this.collection = [...this.collection, ...newDiscounts]
 
@@ -173,5 +186,6 @@ export class DiscountCollection implements IDiscountCollection {
 
     public destory() {
         this.collection = []
+        this.lastIndex = 0  
     }
 }

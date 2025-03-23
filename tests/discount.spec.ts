@@ -1,4 +1,4 @@
-import { Discount, DiscountCollection, IDiscount } from "../src/service/discount.service"
+import { Discount, DiscountCollection, IDiscountWithoutId } from "../src/service/discount.service"
 
 describe('Discount', () => {
     const discountCollection = DiscountCollection.getInstance()
@@ -36,7 +36,7 @@ describe('Discount', () => {
     })
 
     it('Multiple Discounts can be created', () => {
-        const discounts: IDiscount[] = [
+        const discounts: IDiscountWithoutId[] = [
             {
                 name: "Discount 1",
                 amount: 50,
@@ -62,11 +62,37 @@ describe('Discount', () => {
 
         const response = discountCollection.addBulk(discounts)
 
-        expect(response).toEqual(discounts.map(each => new Discount(each)));
+        expect(response).toEqual([
+            new Discount({
+                id: 1,
+                name: "Discount 1",
+                amount: 50,
+                type: 'percentage',
+            }),
+            new Discount({
+                id: 2,
+                name: "Discount 2",
+                amount: 250,
+                type: 'fixed',
+            }),
+            new Discount({
+                id: 3,
+                name: "Discount 3",
+                amount: 500,
+                type: 'fixed',
+            }),
+            new Discount({
+                id: 4,
+                name: "Discount 4",
+                amount: 100,
+                type: 'percentage',
+                maxAmount: 500
+            }),
+        ]);
     })
 
     it('Get Discount', () => {
-        const discounts: IDiscount[] = [
+        const discounts: IDiscountWithoutId[] = [
             {
                 name: "Discount 1",
                 amount: 50,
@@ -100,7 +126,7 @@ describe('Discount', () => {
     })
 
     it('Discount can be deleted', () => {
-        const discounts: IDiscount[] = [
+        const discounts: IDiscountWithoutId[] = [
             {
                 name: "Discount 1",
                 amount: 50,
