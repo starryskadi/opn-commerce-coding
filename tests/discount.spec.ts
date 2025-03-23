@@ -1,7 +1,7 @@
 import { Discount, DiscountCollection, IDiscount } from "../src/service/discount.service"
 
 describe('Discount', () => {
-    const discountCollection = new DiscountCollection()
+    const discountCollection = DiscountCollection.getInstance()
 
     it('Fixed Discount can be created', () => {
         discountCollection.add({
@@ -36,7 +36,7 @@ describe('Discount', () => {
     })
 
     it('Multiple Discounts can be created', () => {
-        const discounts: Discount[] = [
+        const discounts: IDiscount[] = [
             {
                 name: "Discount 1",
                 amount: 50,
@@ -58,17 +58,15 @@ describe('Discount', () => {
                 type: 'percentage',
                 maxAmount: 500
             },
-        ].map(each => {
-            return new Discount(each as IDiscount)
-        })
+        ]
 
         const response = discountCollection.addBulk(discounts)
 
-        expect(response.collection).toEqual(discounts);
+        expect(response).toEqual(discounts.map(each => new Discount(each)));
     })
 
     it('Get Discount', () => {
-        const discounts: Discount[] = [
+        const discounts: IDiscount[] = [
             {
                 name: "Discount 1",
                 amount: 50,
@@ -90,9 +88,7 @@ describe('Discount', () => {
                 type: 'percentage',
                 maxAmount: 500
             },
-        ].map(each => {
-            return new Discount(each as IDiscount)
-        })
+        ]
 
         discountCollection.addBulk(discounts)
 
@@ -104,7 +100,7 @@ describe('Discount', () => {
     })
 
     it('Discount can be deleted', () => {
-        const discounts: Discount[] = [
+        const discounts: IDiscount[] = [
             {
                 name: "Discount 1",
                 amount: 50,
@@ -126,9 +122,7 @@ describe('Discount', () => {
                 type: 'percentage',
                 maxAmount: 500
             },
-        ].map(each => {
-            return new Discount(each as IDiscount)
-        })
+        ]
 
         discountCollection.addBulk(discounts)
 

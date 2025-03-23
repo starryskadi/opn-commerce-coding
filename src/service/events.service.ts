@@ -1,18 +1,21 @@
 import { EventEmitter } from 'events'
 
-let instance: EventService;
-
 export default class EventService extends EventEmitter {
-    constructor() {
-        super()
-        if (instance) {
-            return instance;
+    private static instance: EventService;
+
+    private constructor() {
+        super()   
+    }
+
+    public static getInstance() {
+        if (!this.instance) {
+            this.instance = new EventService()
         }
-        instance = this;
+
+        return this.instance
     }
 }
 
 export const EVENTS = {
     CART_UPDATED: 'cart.updated',
-    CALCULATE_FREEBIES: 'cart.calculate_freebies'
 }

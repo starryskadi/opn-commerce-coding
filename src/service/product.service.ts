@@ -1,75 +1,100 @@
-import Status from "../status"
-
-export class Product {
-    id: number
+export interface IProduct {
+    id: number; 
     name: string;
     price: number
+}
 
-    constructor({id, name, price}: Product) {
-        this.id = id, 
-        this.price = price
-        this.name = name
+export class Product implements IProduct {
+    private _id: number
+    private _name: string;
+    private _price: number
+
+    constructor({id, name, price}: IProduct) {
+        this._id = id, 
+        this._price = price
+        this._name = name
+    }
+
+    get id() {
+        return this._id
+    }
+
+    get name() {
+        return this._name
+    }
+
+    set name(name: string) {
+        this._name = name
+    }
+
+    get price() {
+        return this._price
+    }
+
+    set price(price) {
+        if (price < 0) {
+            throw new Error("Price cannot be negative value")
+        }
+        this._price = price
     }
 }
 
-// Singleton to make sure that there is only one product colletion for the whole app
-let instance: ProductCollection 
+interface IProductCollection {
+    add(product: IProduct): Product
+    addBulk(products: IProduct[]): Product[]
+    remove(product: Pick<IProduct, 'id'>): boolean
+    getById(product: Pick<IProduct, 'id'>): Product
+    getAll(): Product[]
+    destory(): void
+}
 
-export class ProductCollection {
+// Singleton to make sure that there is only one product colletion for the whole app
+
+export class ProductCollection implements IProductCollection {
+    static instance: ProductCollection
     private collection: Product[] = []
 
-    constructor() {
-        if (instance) return instance
+    private constructor() {}
 
-        instance = this
+    public static getInstance() {
+        if (!this.instance) {
+            this.instance = new ProductCollection()
+        }
+
+        return this.instance
     }
 
-    public add(product: Product) {
+    public add(product: IProduct) {
         const newProduct = new Product(product)
         this.collection.push(newProduct)
 
-        return {
-            collection: this.collection,
-            status: new Status({
-                type: 'success', 
-                message: `Successfully added Product:${product.id}`
-            })
-        }
+        return newProduct
     }
 
-    public addBulk(products: Product[]) {
+    public addBulk(products: IProduct[]) {
         const newProducts = products.map(product => {
             return new Product(product)
         })
         this.collection = [...this.collection, ...newProducts]
 
-        return {
-            collection: this.collection,
-            status: new Status({
-                type: 'success', 
-                message: `Successfully added Products`
-            })
-        }
+        return newProducts
     }
 
-    public remove(product: Pick<Product, 'id'>) {
+    public remove(product: Pick<IProduct, 'id'>) {
         const index = this.collection.findIndex((item) => {
             return item.id === product.id
         })
 
         if (index < 0) {
-            throw Error(`Removing Discount:${product.id} not existed`)
+            throw Error(`Removing Product:${product.id} not existed`)
         }
 
         this.collection.splice(index, 1)
         
-        return new Status({
-            type: 'success', 
-            message: `Successfully removed Discount:${product.id}`
-        })
+        return true
     } 
 
-    public getById(product: Pick<Product, 'id'>)  {
+    public getById(product: Pick<IProduct, 'id'>): Product {
         const item = this.collection.find((item) => {
             return item.id === product.id
         })

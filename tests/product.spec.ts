@@ -1,7 +1,7 @@
 import { Product, ProductCollection } from "../src/service/product.service" 
 
 describe("Product", () => {
-    const productCollection = new ProductCollection()
+    const productCollection = ProductCollection.getInstance()
 
     it("Product can be created", () => {
         const product = new Product({

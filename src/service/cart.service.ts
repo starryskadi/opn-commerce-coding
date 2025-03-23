@@ -1,147 +1,234 @@
-import { DiscountCollection, Discount, isFixedDiscount, isPercentageDiscount } from "./discount.service";
-import { BuyXGetY, FreebiesCollection } from "./freebies.service";
-import { ProductCollection, type Product } from "./product.service"
-import Status from "../status";
+import { DiscountCollection, Discount } from "./discount.service";
+import { FreebiesCollection } from "./freebies.service";
+import { type Product, ProductCollection, } from "./product.service"
 import EventService, { EVENTS } from "./events.service";
-let instance: Cart; 
 
-export type CartItem = Product & { quantity: number, freeQuantity: number }
+
+export interface ICartItem { 
+    productId: Product['id'],
+    quantity: number,
+    freeQuantity: number
+}
+
+export class CartItem implements ICartItem {
+    private _productId: Product['id'];
+    private _quantity: number;
+    private _freeQuantity: number;
+
+    constructor({ productId, quantity, freeQuantity }: ICartItem) {
+        if (freeQuantity > quantity) {
+            throw Error(`Free quantity cannot be greater than quantity`)
+        }
+
+        if (freeQuantity < 0) {
+            throw Error(`Free quantity cannot be negative value`)
+        }
+
+        if (quantity < 0) {
+            throw Error(`Quantity cannot be negative value`)
+        }
+
+        this._productId = productId
+        this._freeQuantity = freeQuantity
+        this._quantity = quantity
+    }
+
+    get productId() {
+        return this._productId
+    }
+
+    get quantity() {
+        return this._quantity
+    }
+
+    get freeQuantity() {
+        return this._freeQuantity
+    }
+
+    set quantity(quantity) {
+        if (quantity < 0) {
+            throw Error(`Quantity cannot be negative value`)
+        }
+
+        this._quantity = quantity
+    }
+
+    set freeQuantity(freeQuantity) {
+        if (this.quantity < freeQuantity) {
+            throw Error(`Free quantity cannot be greater than quantity`)
+        }
+
+        if (freeQuantity < 0) {
+            throw Error(`Free quantity cannot be negative value`)
+        }
+
+        this._freeQuantity = freeQuantity
+    }
+}
 
 type CartItemActionOption = {
     noEmit?: boolean
     isFree?: boolean
 }
 
+interface ICart {
+    add(cartItem: Pick<CartItem, 'productId'>, options?: CartItemActionOption): CartItem
+    addOrUpdateByRelative(cartItem: Pick<CartItem, 'productId' | 'quantity'>, options: CartItemActionOption): CartItem
+    getAll(): CartItem[]
+    getById(product: Pick<CartItem, 'productId'>): CartItem
+    update(cartItem: Pick<CartItem, 'productId' | 'quantity'>, options?: CartItemActionOption): CartItem
+    updateByRelative(cartItem: Pick<CartItem, 'productId' | 'quantity'>, options: CartItemActionOption): CartItem
+    remove(product: Pick<CartItem, 'productId'>): boolean
+    applyDiscount(discount: Pick<Discount, 'name'>): Discount[]
+    removeDiscount(discount: Pick<Discount, 'name'>): Discount[]
+    getAppliedDiscount(): Discount[]
+    getSubTotalAmount(): number
+    getTotalAmount(): number
+    getUniqueCounts(): number
+    getTotalItemsCount(): number
+    isItemExist(cartItem: Pick<CartItem, 'productId'>): boolean
+    isEmpty(): boolean
+    destory(): void
+}
+
 // Singleton to make sure that there is only one cart for the whole app
-export default class Cart {
+export default class Cart implements ICart {
+    private static instance: Cart
     private items: CartItem[] = []
-    private eventService: EventService = new EventService()
-    private productCollection: ProductCollection = new ProductCollection()
-    private discountCollection: DiscountCollection = new DiscountCollection()
-    private freeBiesCollection: FreebiesCollection = new FreebiesCollection()
+    private eventService: EventService = EventService.getInstance()
+    private productCollection: ProductCollection = ProductCollection.getInstance()
+    private discountCollection: DiscountCollection = DiscountCollection.getInstance()
+    private freeBiesCollection: FreebiesCollection = FreebiesCollection.getInstance()
     private appliedDiscounts: Discount[] = []
     private prevItems: CartItem[] = []
-
     // Cart can be created
-    constructor() {
+    private constructor() {
         this.eventService.on(EVENTS.CART_UPDATED, this.onCartUpdated.bind(this))
-
-        if (instance) return instance
-
-        instance = this
     }
 
-    // Cart can be destroy 
-    public destory() {
-        // Assuming "Cart can be destroyed" means removing all items
-        this.items = [];
-        this.appliedDiscounts = []
-        this.prevItems = []
+    public static getInstance() {
+        if (!this.instance) {
+            this.instance = new Cart()
+        }
+
+        return this.instance
     }
 
-    // Can check if product already exists
-    public isItemExist(product: Pick<Product, 'id'>) {
-        return this.items.findIndex((item) => {
-            return item.id === product.id
-        }) > -1
-    }
+    public add(cartItem: Pick<CartItem, 'productId'>, options?: CartItemActionOption) {
+        const item = this.productCollection.getById({
+            id: cartItem.productId
+        })
 
-    // Can check if cart is empty
-    public isEmpty() {
-        return !this.items.length
-    }
-
-    public add(product: Pick<CartItem, 'id'>, options?: CartItemActionOption) {
-        const item = this.productCollection.getById(product)
-        this.items.push({
-            ...item,
+        const newCartItem = new CartItem({
+            productId: item.id,
             quantity: 1,
             freeQuantity: options?.isFree ? 1 : 0
         })
 
+        this.items.push(newCartItem)
+
         if (!options?.noEmit) {
             this.eventService.emit(EVENTS.CART_UPDATED, this.items)
         }
+
+        return newCartItem
+    }
+
+    public getAll () {
+        return this.items;
+    }
+
+    public getById(product: Pick<CartItem, 'productId'>): CartItem {
+        const item = this.items.find((item) => {
+            return item.productId === product.productId
+        })
+
+        if (!item) {
+            throw Error(`Product:${product.productId} not existed`)
+        }
+
+        return item
     }
 
     // Set to private first as it's only used in cart service
-    private addWithQuantity(product: Pick<CartItem, 'id' | 'quantity'>, options?: CartItemActionOption) {
-        const item = this.productCollection.getById(product)
-        this.items.push({
-            ...item,
+    private addWithQuantity(product: Pick<CartItem, 'productId' | 'quantity'>, options?: CartItemActionOption) {
+        const item = this.productCollection.getById({
+            id: product.productId
+        })
+        const newCartItem = new CartItem({
+            productId: item.id,
             quantity: product.quantity,
             freeQuantity: options?.isFree ? product.quantity : 0
         })
+        this.items.push(newCartItem)
 
         if (!options?.noEmit) {
             this.eventService.emit(EVENTS.CART_UPDATED, this.items)
         }
+        
+        return newCartItem
     }
 
-    public update(product: Pick<CartItem, 'id' | 'quantity'>, options?: CartItemActionOption) {
-        if (product.quantity < 0) {
-            throw new Error(`Product:${product.id} quantity cannot be negative`)
-        }
-
+    public update(cartItem: Pick<CartItem, 'productId' | 'quantity'>, options?: CartItemActionOption) {
         const existedItemIndex = this.items.findIndex((item) => {
-            return item.id === product.id
+            return item.productId === cartItem.productId
         })
 
         if (existedItemIndex < 0) {
-           throw new Error(`Product:${product.id} not existed. Add product first`)
+           throw new Error(`Product:${cartItem.productId} not existed. Add product first`)
         } else {
-            this.items[existedItemIndex] = {
-                ...this.items[existedItemIndex],
-                quantity: product.quantity,
-                freeQuantity: options?.isFree ? product.quantity : 0
-            }
+            this.items[existedItemIndex] = new CartItem({
+                productId: cartItem.productId,
+                quantity: cartItem.quantity,
+                freeQuantity: options?.isFree ? cartItem.quantity : 0
+            })
         }
 
         if (!options?.noEmit) {
             this.eventService.emit(EVENTS.CART_UPDATED, this.items)
         }
+
+        return this.items[existedItemIndex]
     }
 
     // Set to private first as it's only used in cart service
-    private updateByRelative(product: Pick<CartItem, 'id' | 'quantity'>, options: CartItemActionOption) {
+    public updateByRelative(cartItem: Pick<CartItem, 'productId' | 'quantity'>, options: CartItemActionOption) {
         const existedItemIndex = this.items.findIndex((item) => {
-            return item.id === product.id
+            return item.productId === cartItem.productId
         })
 
         if (existedItemIndex < 0) {
-            throw new Error(`Product:${product.id} not existed. Add product first`)
+            throw new Error(`Product:${cartItem.productId} not existed. Add product first`)
         } else {
-            let updatedQuantity = this.items[existedItemIndex].quantity + product.quantity
-            let updatedFreeQuantity = options.isFree ? this.items[existedItemIndex].freeQuantity + product.quantity : this.items[existedItemIndex].freeQuantity
+            let updatedQuantity = this.items[existedItemIndex].quantity + cartItem.quantity
+            let updatedFreeQuantity = options.isFree ? this.items[existedItemIndex].freeQuantity + cartItem.quantity : this.items[existedItemIndex].freeQuantity
 
-            if (updatedQuantity < 0) {
-                throw new Error(`Product:${product.id} quantity cannot be negative`)
-            }
-
-            this.items[existedItemIndex] = {
-                ...this.items[existedItemIndex],
+            this.items[existedItemIndex] = new CartItem({
+                productId: cartItem.productId,
                 quantity: updatedQuantity,
                 freeQuantity: updatedFreeQuantity
-            }
+            })
         }
 
         if (!options.noEmit) {
             this.eventService.emit(EVENTS.CART_UPDATED, this.items)
         }
+
+        return this.items[existedItemIndex]
     }
 
-    public addOrUpdateByRelative(product: Pick<CartItem, 'id' | 'quantity'>, options: CartItemActionOption) {
+    public addOrUpdateByRelative(cartItem: Pick<CartItem, 'productId' | 'quantity'>, options: CartItemActionOption) {
        try {
-            this.updateByRelative(product, options)
+            return this.updateByRelative(cartItem, options)
        } catch (error) {
-            this.addWithQuantity(product, options)
+            return this.addWithQuantity(cartItem, options)
        }
     }
 
     private onCartUpdated() {
         // Handle freebies changes when items are updated
         this.items.map(item => {
-            const freeItems = this.freeBiesCollection.getAllByBuyX({ id: item.id })
+            const freeItems = this.freeBiesCollection.getAllByBuyX({ id: item.productId })
 
             if (!freeItems.length) return item
 
@@ -154,7 +241,7 @@ export default class Cart {
 
                     if (!shouldGiveFreeItem) {
                         // check if freebie is already given
-                        const freeItemGiven = this.items.find(i => i.id === freeItem.getY.id)
+                        const freeItemGiven = this.items.find(i => i.productId === freeItem.getY.id)
 
                         if (freeItemGiven) {
                             freeItemsSummary[freeItem.getY.id] = freeItemGiven.freeQuantity - freeItem.getYQuantity
@@ -181,14 +268,24 @@ export default class Cart {
                 } 
             })
 
+            
+
             Object.keys(freeItemsSummary).map(each => {
-                const id = Number(each)
-                const currentFreeItemQuantity = this.getById({ id: id })?.freeQuantity || 0
+                const productId = Number(each)
+         
+                let currentFreeItemQuantity = 0
+
+                try {
+                    currentFreeItemQuantity = this.getById({ productId })?.freeQuantity
+                } catch (error) {
+                    currentFreeItemQuantity = 0
+                }
+
                 const freeItemQuantity = freeItemsSummary[each]
 
                 const freeItemQuantityToAdd = freeItemQuantity - currentFreeItemQuantity
                 this.addOrUpdateByRelative({
-                    id: id,
+                    productId: productId,
                     quantity: freeItemQuantityToAdd
                 }, { isFree: true, noEmit: true })
             }) 
@@ -199,8 +296,8 @@ export default class Cart {
  
         // Handle freebies removal when items are removed
         if (this.prevItems.length) {
-            const prevItemsID = this.prevItems.map(item => item.id)
-            const currentItemsID = this.items.map(item => item.id)
+            const prevItemsID = this.prevItems.map(item => item.productId)
+            const currentItemsID = this.items.map(item => item.productId)
 
             prevItemsID.forEach(id => {
                 if (!currentItemsID.includes(id)) {
@@ -208,7 +305,7 @@ export default class Cart {
 
                     freeItems.map(freeItem => {
                         this.addOrUpdateByRelative({
-                            id: freeItem.getY.id,
+                            productId: freeItem.getY.id,
                             quantity: -freeItem.getYQuantity
                         }, { isFree: true, noEmit: true })
                     })    
@@ -220,66 +317,46 @@ export default class Cart {
     }
 
     // Product can be remove from cart via product id
-    public remove(product: Pick<Product, 'id'>) {
+    public remove(product: Pick<CartItem, 'productId'>) {
         const index = this.items.findIndex((item) => {
-            return item.id === product.id
+            return item.productId === product.productId
         })
 
         if (index < 0) {
-            throw Error(`Removing Product:${product.id} not existed`)
+            throw Error(`Removing Product:${product.productId} not existed`)
         }
 
         this.items.splice(index, 1)
 
         this.eventService.emit(EVENTS.CART_UPDATED, this.items)
 
-        return new Status({
-            type: 'success', 
-            message: `Successfully removed Product:${product.id}`
-        })
+        return true
      } 
     // Can list
     //  all items in cart
-    public getAll () {
-        return this.items;
-    }
-
-    public getById(product: Pick<Product, 'id'>) {
-        return this.items.find((item) => {
-            return item.id === product.id
-        })
-    }
-
-    // Can count number of unique items in cart
-    public getUniqueCounts () {
-        return new Set(this.items).size
-    }
-    
-    public getSubTotalAmount()  {
-        const subTotal = this.items.reduce((prev, cur) => {
-            const actualQuantity = cur.freeQuantity ? cur.quantity - cur.freeQuantity : cur.quantity
-            return prev + (actualQuantity * cur.price)
-        }, 0)
-
-        return subTotal
-    }
-
-    public getTotalItemsCount() {
-        return this.items.reduce((prev, cur) => {
-            return prev + cur.quantity
-        }, 0)
-    }
 
     public applyDiscount(discount: Pick<Discount, 'name'>){
         this.appliedDiscounts.push(this.discountCollection.get(discount))
+        return this.appliedDiscounts
     }
 
     public removeDiscount(discount: Pick<Discount, 'name'>) {
         this.appliedDiscounts = this.appliedDiscounts.filter(d => d.name !== discount.name)
+        return this.appliedDiscounts
     }
 
     public getAppliedDiscount() {
         return this.appliedDiscounts
+    }
+
+    public getSubTotalAmount()  {
+        const subTotal = this.items.reduce((prev, cur) => {
+            const product = this.productCollection.getById({ id: cur.productId })
+            const actualQuantity = cur.freeQuantity ? cur.quantity - cur.freeQuantity : cur.quantity
+            return prev + (actualQuantity * product.price)
+        }, 0)
+
+        return subTotal
     }
 
     public getTotalAmount() {
@@ -287,9 +364,9 @@ export default class Cart {
 
         if (this.appliedDiscounts.length) {
            this.appliedDiscounts.map(discount => {
-                if (isFixedDiscount(discount)) {
+                if (discount.isFixed()) {
                     totalAmount -= discount.amount
-                } else if (isPercentageDiscount(discount)) {
+                } else if (discount.isPercentage()) {
                     const discountedAmount = (totalAmount * discount.amount) / 100
 
                     if (discount.maxAmount) {
@@ -307,5 +384,36 @@ export default class Cart {
         }
 
         return totalAmount
+    }
+
+    // Can count number of unique items in cart
+    public getUniqueCounts () {
+        return new Set(this.items).size
+    }
+    
+    public getTotalItemsCount() {
+        return this.items.reduce((prev, cur) => {
+            return prev + cur.quantity
+        }, 0)
+    }
+
+    // Can check if product already exists
+     public isItemExist(cartItem: Pick<CartItem, 'productId'>) {
+        return this.items.findIndex((item) => {
+            return item.productId === cartItem.productId
+        }) > -1
+    }
+
+    // Can check if cart is empty
+    public isEmpty() {
+        return !this.items.length
+    }
+
+    // Cart can be destroy 
+    public destory() {
+        // Assuming "Cart can be destroyed" means removing all items
+        this.items = [];
+        this.appliedDiscounts = []
+        this.prevItems = []
     }
 }

@@ -1,5 +1,3 @@
-import Status from "../status";
-
 type FixedDiscountType = 'fixed'
 type PercentageDiscountType = 'percentage'
  
@@ -24,89 +22,123 @@ interface IPercentageDiscount extends IBaseDiscount {
 
 export type IDiscount = IFixedDiscount | IPercentageDiscount ;
 
-export const isFixedDiscount = (discount: Discount): discount is IFixedDiscount => {
-    return discount.type === 'fixed'
-}
-
-export const isPercentageDiscount = (discount: Discount): discount is IPercentageDiscount => {
-    return discount.type === 'percentage'
-}
-
 /**
  * @param maxAmount 
  * If the discount type is fixed, the max amount is equal to amount 
  * If the discount type is percentage, the max amount is the provided value
  */
-export class Discount {
-    name: string;
-    type: DiscountType;
-    amount?: number;
-    maxAmount?: number;
+export class Discount implements IBaseDiscount {
+    private _name: string;
+    private _type: DiscountType;
+    private _amount?: number;
+    private _maxAmount?: number;
 
     constructor(discount: IDiscount) {
-        this.name = discount.name
-        this.type = discount.type
+        this._name = discount.name
+        this._type = discount.type
 
         switch (discount.type) {
             case 'percentage':
                 if (discount.amount < 0 || discount.amount > 100) {
                     throw Error(`Discount Type: Percentage must be within 1 and 100`)
                 }
-                this.amount = discount.amount
-                this.maxAmount = discount.maxAmount
+                this._amount = discount.amount
+                this._maxAmount = discount.maxAmount
                 break
             case 'fixed':
                 if (discount.amount < 0) {
                     throw Error(`Discount Type: Fixed can't be lower than 0`)
                 }
-                this.amount = discount.amount
-                this.maxAmount = discount.amount
+                this._amount = discount.amount
+                this._maxAmount = discount.amount
                 break
             default:
                 break
         }
+    }
 
+    get name() {
+        return this._name
+    }
+
+    get type() {
+        return this._type
+    }
+
+    get amount(): number | undefined {
+        return this._amount
+    }
+
+    set amount(amount: number) {
+        if (this.isFixed()) {
+            this._amount = amount
+            this._maxAmount = amount
+        }
+        if (this.isPercentage()) {
+            this._amount = amount
+        }
+    }   
+
+    get maxAmount(): number | undefined {
+        return this._maxAmount
+    }
+
+    set maxAmount(maxAmount: number) {
+        if (this.isFixed()) {
+            this._maxAmount = undefined
+        }
+        if (this.isPercentage()) {
+            this._maxAmount = maxAmount
+        }
+    }
+
+    isFixed(): this is IFixedDiscount {
+        return this._type === 'fixed'
+    }
+
+    isPercentage(): this is IPercentageDiscount {
+        return this._type === 'percentage'
     }
 }
 
-let instance: DiscountCollection;
+interface IDiscountCollection {
+    add(discount: IDiscount): Discount
+    addBulk(discounts: IDiscount[]): Discount[]
+    remove(discount: Pick<Discount, 'name'>): boolean   
+    get(discount: Pick<Discount, 'name'>): Discount
+    getAll(): Discount[]
+    destory(): void
+}
 
 // Singleton to make sure that there is only discount collection
-export class DiscountCollection {
+export class DiscountCollection implements IDiscountCollection {
+    private static instance: DiscountCollection
     private collection: Discount[] = []
     
-    constructor() {
-        if (instance) return instance
+    private constructor() {}
 
-        instance = this
+    public static getInstance() {
+        if (!this.instance) {
+            this.instance = new DiscountCollection()
+        }
+
+        return this.instance
     }
 
-    public add(discount: Discount) {
-        const newDiscount = new Discount(discount as IDiscount)
+    public add(discount: IDiscount) {
+        const newDiscount = new Discount(discount)
         this.collection.push(newDiscount)
 
-        return {
-            collection: this.collection, 
-            status: new Status({
-                type: 'success', 
-                message: `Successfully added Discount:${discount.name}`
-            })
-        }
+        return newDiscount
     }
 
-    public addBulk(discounts: Discount[]) {
+    public addBulk(discounts: IDiscount[]) {
         const newDiscounts = discounts.map(each => {
-            return new Discount(each as IDiscount)
+            return new Discount(each)
         })
         this.collection = [...this.collection, ...newDiscounts]
 
-        return {
-            collection: this.collection,
-            status: new Status({
-                type: 'success', 
-                message: `Successfully added Discounts`
-            })
-        }
+        return newDiscounts
     }
 
     public remove(discount: Pick<Discount, 'name'>) {
@@ -120,10 +152,7 @@ export class DiscountCollection {
 
         this.collection.splice(index, 1)
         
-        return new Status({
-            type: 'success', 
-            message: `Successfully added Discount:${discount.name}`
-        })
+        return true
     }
 
     public get(discount: Pick<Discount, 'name'>) {

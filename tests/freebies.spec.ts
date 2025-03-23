@@ -1,9 +1,9 @@
-import { FreebiesCollection } from "../src/service/freebies.service";
+import { BuyXGetY, FreebiesCollection } from "../src/service/freebies.service";
 import { ProductCollection } from "../src/service/product.service";
 
 describe('Freebies', () => {
-    const freebiesCollection = new FreebiesCollection()
-    const productCollection = new ProductCollection()
+    const freebiesCollection = FreebiesCollection.getInstance()
+    const productCollection = ProductCollection.getInstance()
 
     beforeAll(() => {
         productCollection.addBulk([
@@ -51,10 +51,10 @@ describe('Freebies', () => {
             {
                 id: 1, 
                 buyX: {
-                    ...productCollection.getById({ id: 1 })
+                    id: 1
                 },
                 getY: {
-                    ...productCollection.getById({ id: 1 })
+                    id: 1
                 },
                 buyXQuantity: 1,
                 getYQuantity: 1,
@@ -63,10 +63,10 @@ describe('Freebies', () => {
             {
                 id: 2, 
                 buyX: {
-                    ...productCollection.getById({ id: 1 })
+                    id: 1
                 },
                 getY: {
-                    ...productCollection.getById({ id: 2 })
+                    id: 2
                 },
                 buyXQuantity: 1,
                 getYQuantity: 1,
@@ -75,10 +75,10 @@ describe('Freebies', () => {
             {
                 id: 3, 
                 buyX: {
-                    ...productCollection.getById({ id: 2 })
+                    id: 2
                 },
                 getY: {
-                    ...productCollection.getById({ id: 3 })
+                    id: 3
                 },
                 buyXQuantity: 1,
                 getYQuantity: 1,
@@ -95,30 +95,30 @@ describe('Freebies', () => {
         })
 
         expect(response).toEqual([
-            {
+            new BuyXGetY({
                 id: 1, 
                 buyX: {
-                    ...productCollection.getById({ id: 1 })
+                    id: 1
                 },
                 getY: {
-                    ...productCollection.getById({ id: 1 })
+                    id: 1
                 },
                 buyXQuantity: 1,
                 getYQuantity: 1,
                 once: false
-            }, 
-            {
+            }), 
+            new BuyXGetY({
                 id: 2, 
                 buyX: {
-                    ...productCollection.getById({ id: 1 })
+                    id: 1
                 },
                 getY: {
-                    ...productCollection.getById({ id: 2 })
+                    id: 2
                 },
                 buyXQuantity: 1,
                 getYQuantity: 1,
                 once: false
-            }
+            }),
         ])
     })
 
@@ -127,10 +127,10 @@ describe('Freebies', () => {
             {
                 id: 1, 
                 buyX: {
-                    ...productCollection.getById({ id: 1 })
+                    id: 1
                 },
                 getY: {
-                    ...productCollection.getById({ id: 1 })
+                    id: 1
                 },
                 buyXQuantity: 1,
                 getYQuantity: 1,
@@ -139,10 +139,10 @@ describe('Freebies', () => {
             {
                 id: 2, 
                 buyX: {
-                    ...productCollection.getById({ id: 1 })
+                    id: 1
                 },
                 getY: {
-                    ...productCollection.getById({ id: 2 })
+                    id: 2
                 },
                 buyXQuantity: 1,
                 getYQuantity: 1,
@@ -151,10 +151,10 @@ describe('Freebies', () => {
             {
                 id: 3, 
                 buyX: {
-                    ...productCollection.getById({ id: 2 })
+                    id: 2
                 },
                 getY: {
-                    ...productCollection.getById({ id: 3 })
+                    id: 3
                 },
                 buyXQuantity: 1,
                 getYQuantity: 1,
