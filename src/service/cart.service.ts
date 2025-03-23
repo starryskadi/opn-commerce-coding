@@ -1,22 +1,31 @@
 import { DiscountCollection, Discount, isFixedDiscount, isPercentageDiscount } from "./discount.service";
-import { FreebiesCollection } from "./freebies.service";
+import { BuyXGetY, FreebiesCollection } from "./freebies.service";
 import { ProductCollection, type Product } from "./product.service"
 import Status from "../status";
-
+import EventService, { EVENTS } from "./events.service";
 let instance: Cart; 
 
-type CartItem = Product & { quantity: number }
+export type CartItem = Product & { quantity: number, freeQuantity: number }
+
+type CartItemActionOption = {
+    noEmit?: boolean
+    isFree?: boolean
+}
 
 // Singleton to make sure that there is only one cart for the whole app
 export default class Cart {
     private items: CartItem[] = []
+    private eventService: EventService = new EventService()
     private productCollection: ProductCollection = new ProductCollection()
     private discountCollection: DiscountCollection = new DiscountCollection()
     private freeBiesCollection: FreebiesCollection = new FreebiesCollection()
     private appliedDiscount: Discount | undefined
+    private prevItems: CartItem[] = []
 
     // Cart can be created
     constructor() {
+        this.eventService.on(EVENTS.CART_UPDATED, this.onCartUpdated.bind(this))
+
         if (instance) return instance
 
         instance = this
@@ -26,10 +35,6 @@ export default class Cart {
     destory() {
         // Assuming "Cart can be destroyed" means removing all items
         this.items = [];
-
-        // Assuming "Cart can be destroyed" means destroying the entire cart, 
-        // but in most ecommerce case, it usually means delete the items
-        // instance = null;
     }
 
     // Can check if product already exists
@@ -44,36 +49,159 @@ export default class Cart {
         return !this.items.length
     }
 
-    // Cart can be updated via product id. This update must be an absolute update
-    addOrUpdate(product: Pick<CartItem, 'id' | 'quantity'>, isAddingFreeItem: boolean = false) {
-        const updatedItem = this.productCollection.getById(product)
-        const freeItems = this.freeBiesCollection.getAllByBuyX(product)  
-
-        const existedItemIndex = this.items.findIndex((item) => {
-            return item.id === updatedItem.id
+    add(product: Pick<CartItem, 'id'>, options?: CartItemActionOption) {
+        const item = this.productCollection.getById(product)
+        this.items.push({
+            ...item,
+            quantity: 1,
+            freeQuantity: options?.isFree ? 1 : 0
         })
 
-        if (existedItemIndex > -1) {
+        if (!options?.noEmit) {
+            this.eventService.emit(EVENTS.CART_UPDATED, this.items)
+        }
+    }
+
+    addWithQuantity(product: Pick<CartItem, 'id' | 'quantity'>, options?: CartItemActionOption) {
+        const item = this.productCollection.getById(product)
+        this.items.push({
+            ...item,
+            quantity: product.quantity,
+            freeQuantity: options?.isFree ? product.quantity : 0
+        })
+
+        if (!options?.noEmit) {
+            this.eventService.emit(EVENTS.CART_UPDATED, this.items)
+        }
+    }
+
+    update(product: Pick<CartItem, 'id' | 'quantity'>, options?: CartItemActionOption) {
+        const existedItemIndex = this.items.findIndex((item) => {
+            return item.id === product.id
+        })
+
+        if (existedItemIndex < 0) {
+           throw new Error(`Product:${product.id} not existed. Add product first`)
+        } else {
             this.items[existedItemIndex] = {
                 ...this.items[existedItemIndex],
-                quantity: product.quantity
+                quantity: product.quantity,
+                freeQuantity: options?.isFree ? product.quantity : 0
             }
+        }
+
+        if (!options?.noEmit) {
+            this.eventService.emit(EVENTS.CART_UPDATED, this.items)
+        }
+    }
+
+    updateByRelative(product: Pick<CartItem, 'id' | 'quantity'>, options: CartItemActionOption) {
+        const existedItemIndex = this.items.findIndex((item) => {
+            return item.id === product.id
+        })
+
+        if (existedItemIndex < 0) {
+            throw new Error(`Product:${product.id} not existed. Add product first`)
         } else {
-            this.items.push({
-                ...updatedItem,
-                quantity: product.quantity
+            this.items[existedItemIndex] = {
+                ...this.items[existedItemIndex],
+                quantity: this.items[existedItemIndex].quantity + product.quantity,
+                freeQuantity: options.isFree ? this.items[existedItemIndex].freeQuantity + product.quantity : this.items[existedItemIndex].freeQuantity
+            }
+        }
+
+        if (!options.noEmit) {
+            this.eventService.emit(EVENTS.CART_UPDATED, this.items)
+        }
+    }
+
+    addOrUpdateByRelative(product: Pick<CartItem, 'id' | 'quantity'>, options: CartItemActionOption) {
+       try {
+            this.updateByRelative(product, options)
+       } catch (error) {
+            this.addWithQuantity(product, options)
+       }
+    }
+
+    onCartUpdated() {
+        // Handle freebies changes when items are updated
+        this.items.map(item => {
+            const freeItems = this.freeBiesCollection.getAllByBuyX({ id: item.id })
+
+            if (!freeItems.length) return item
+
+
+            const freeItemsSummary: Record<string, number> = {}
+
+            freeItems.map(freeItem => { 
+                if (freeItem.once) {
+                    const shouldGiveFreeItem = item.quantity >= freeItem.buyXQuantity
+
+                    if (!shouldGiveFreeItem) {
+                        // check if freebie is already given
+                        const freeItemGiven = this.items.find(i => i.id === freeItem.getY.id)
+
+                        if (freeItemGiven) {
+                            freeItemsSummary[freeItem.getY.id] = freeItemGiven.freeQuantity - freeItem.getYQuantity
+                        }
+
+                        return
+                    }
+
+                    if (freeItem.getY.id in freeItemsSummary) {
+                        freeItemsSummary[freeItem.getY.id] += freeItem.getYQuantity
+                    } else {
+                        freeItemsSummary[freeItem.getY.id] = freeItem.getYQuantity
+                    }
+
+                    return
+                }
+
+               let freeItemQuantity = Math.floor((item.quantity - item.freeQuantity) / freeItem.buyXQuantity) * (freeItem.getYQuantity)
+               
+                if (freeItem.getY.id in freeItemsSummary) {
+                    freeItemsSummary[freeItem.getY.id] += freeItemQuantity
+                } else {
+                    freeItemsSummary[freeItem.getY.id] = freeItemQuantity
+                } 
+            })
+
+            Object.keys(freeItemsSummary).map(each => {
+                const id = Number(each)
+                const currentFreeItemQuantity = this.getById({ id: id })?.freeQuantity || 0
+                const freeItemQuantity = freeItemsSummary[each]
+
+                const freeItemQuantityToAdd = freeItemQuantity - currentFreeItemQuantity
+                this.addOrUpdateByRelative({
+                    id: id,
+                    quantity: freeItemQuantityToAdd
+                }, { isFree: true, noEmit: true })
+            }) 
+        })
+
+        // Check if there any product that have zero quantity and remove it
+        this.items = this.items.filter(item => item.quantity > 0)
+ 
+        // Handle freebies removal when items are removed
+        if (this.prevItems.length) {
+            const prevItemsID = this.prevItems.map(item => item.id)
+            const currentItemsID = this.items.map(item => item.id)
+
+            prevItemsID.forEach(id => {
+                if (!currentItemsID.includes(id)) {
+                    const freeItems = this.freeBiesCollection.getAllByBuyX({ id: id })
+
+                    freeItems.map(freeItem => {
+                        this.addOrUpdateByRelative({
+                            id: freeItem.getY.id,
+                            quantity: -freeItem.getYQuantity
+                        }, { isFree: true, noEmit: true })
+                    })    
+                }
             })
         }
 
-        if (freeItems.length && !isAddingFreeItem) {
-            // Added 'isAddingFreeItem' to stop recursive if buyXgetY is adding the same item
-            freeItems.map(freeItem => {
-                this.addOrUpdate({
-                    ...freeItem.getY,
-                    quantity: 1
-                }, true)
-            })
-        }
+        this.prevItems = [ ...this.items ]
     }
 
     // Product can be remove from cart via product id
@@ -87,7 +215,9 @@ export default class Cart {
         }
 
         this.items.splice(index, 1)
-        
+
+        this.eventService.emit(EVENTS.CART_UPDATED, this.items)
+
         return new Status({
             type: 'success', 
             message: `Successfully removed Product:${product.id}`
@@ -111,9 +241,12 @@ export default class Cart {
     }
     
     getSubTotalAmount()  {
-        return this.items.reduce((prev, cur) => {
-            return prev + (cur.quantity * cur.price)
+        const subTotal = this.items.reduce((prev, cur) => {
+            const actualQuantity = cur.freeQuantity ? cur.quantity - cur.freeQuantity : cur.quantity
+            return prev + (actualQuantity * cur.price)
         }, 0)
+
+        return subTotal
     }
 
     getTotalItemsCount() {

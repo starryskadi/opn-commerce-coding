@@ -52,18 +52,19 @@ describe("Cart", () => {
             },
         ])
     })
-
+ 
+    //#region Positive Cases
     it('Product can be added to cart via product id', () => {
         const product = productCollection.getById({ id: 1});
         
-        cart.addOrUpdate({
+        cart.add({
             id: product.id,
-            quantity: 1
         })
 
         expect(cart.getById(product)).toEqual({
             ...product,
-            quantity: 1
+            quantity: 1,
+            freeQuantity: 0
         })
     })
 
@@ -72,9 +73,8 @@ describe("Cart", () => {
     // i.e. updating product id 1 with quantity of 10 will update the cart product id 1 in cart to quantity of 10
     it('Product can be updated to cart via product id with absolute quantity', () => {
         // Initialize the product
-        cart.addOrUpdate({
+        cart.add({
             id: productCollection.getById({ id: 1 }).id,
-            quantity: 1
         })
 
         const updatedProduct = {
@@ -82,7 +82,7 @@ describe("Cart", () => {
             quantity: 10
         }
 
-        cart.addOrUpdate(updatedProduct)
+        cart.update(updatedProduct)
 
         expect(cart.getById({
             id: 1
@@ -90,19 +90,16 @@ describe("Cart", () => {
     })
 
     it('Product can be remove from cart via product id', () => {
-        cart.addOrUpdate({
+        cart.add({
             id: productCollection.getById({ id: 1 }).id,
-            quantity: 1
         })
 
-        cart.addOrUpdate({
+        cart.add({
             id: productCollection.getById({ id: 2 }).id,
-            quantity: 1
         })
 
-        cart.addOrUpdate({
+        cart.add({
             id: productCollection.getById({ id: 3 }).id,
-            quantity: 1
         })
 
         cart.remove({
@@ -110,15 +107,14 @@ describe("Cart", () => {
         })
 
         expect(cart.getAll()).toEqual([
-            { ...productCollection.getById({ id: 1 }), quantity: 1},
-            { ...productCollection.getById({ id: 2 }), quantity: 1}
+            { ...productCollection.getById({ id: 1 }), quantity: 1, freeQuantity: 0},
+            { ...productCollection.getById({ id: 2 }), quantity: 1, freeQuantity: 0}
         ])
     })
 
-    it('Can check if product already exists (Positive)', () => {
-        cart.addOrUpdate({
+    it('Can check if product already exists', () => {
+        cart.add({
             id: productCollection.getById({ id: 1}).id,
-            quantity: 1
         })
 
         const isItemExist = cart.isItemExist({
@@ -128,79 +124,164 @@ describe("Cart", () => {
         expect(isItemExist).toBe(true)
     })
 
-    it('Can check if product already exists (Negative)', () => {
-        cart.addOrUpdate({
-            id: productCollection.getById({ id: 2 }).id,
-            quantity: 1
+    it('Freebies automatically added to cart via product id', () => {
+        [
+            {
+                id: 1,
+                buyX: productCollection.getById({ id: 1 }),
+                getY: productCollection.getById({ id: 2 }),
+                buyXQuantity: 1,
+                getYQuantity: 5,
+                once: false
+            },
+            {
+                id: 2,
+                buyX: productCollection.getById({ id: 1 }),
+                getY: productCollection.getById({ id: 2 }),
+                buyXQuantity: 1,
+                getYQuantity: 20,
+                once: true
+            },
+            {
+                id: 3,
+                buyX: productCollection.getById({ id: 1 }),
+                getY: productCollection.getById({ id: 2 }),
+                buyXQuantity: 1,
+                getYQuantity: 25,
+                once: true
+            }
+        ].map(freebie => {
+            freebies.add(freebie)
         })
 
-        const isItemExist = cart.isItemExist({
-            id: 1
+        cart.add({
+            id: productCollection.getById({ id: 1}).id,
         })
 
-        expect(isItemExist).toBe(false)
+       expect(cart.getById({
+            id: 2
+        })?.freeQuantity).toBe(50)
     })
 
-    it('Freebies added to cart via product id', () => {
+    it('Freebies must not be charged', () => {
         const addedFreebie = {
             id: 1,
             buyX: productCollection.getById({ id: 1 }),
             getY: productCollection.getById({ id: 2 }),
+            buyXQuantity: 1,
+            getYQuantity: 5,
+            once: false
         }
 
         freebies.add(addedFreebie)
 
-        cart.addOrUpdate({
+        cart.add({
             id: productCollection.getById({ id: 1}).id,
-            quantity: 1
         })
 
-        expect(cart.getById({
-            id: addedFreebie.getY.id
-        })).toEqual({ ...addedFreebie.getY, quantity: 1 })
+        expect(cart.getSubTotalAmount()).toBe(50)
+    })
+
+    it('If item is removed, freebies must be removed', () => {
+        const addedFreebie = {
+            id: 1,
+            buyX: productCollection.getById({ id: 1 }),
+            getY: productCollection.getById({ id: 2 }),
+            buyXQuantity: 1,
+            getYQuantity: 5,
+            once: false
+        }
+
+        freebies.add(addedFreebie)
+
+        cart.add({
+            id: productCollection.getById({ id: 1}).id,
+        })
+
+        cart.remove({
+            id: productCollection.getById({ id: 1}).id,
+        })
+
+        expect(cart.getById({ id: 2 })?.freeQuantity).toBe(0)
+    })
+
+    it('If item is reduced, freebies must be reduced (once freebie)', () => {
+        const addedFreebie = {
+            id: 1,
+            buyX: productCollection.getById({ id: 1 }),
+            getY: productCollection.getById({ id: 2 }),
+            buyXQuantity: 3,
+            getYQuantity: 5,
+            once: true
+        }
+
+        freebies.add(addedFreebie)
+
+        cart.add({
+            id: productCollection.getById({ id: 1}).id,
+        })
+
+        cart.update({
+            id: productCollection.getById({ id: 1}).id,
+            quantity: 6
+        })
+
+        cart.update({
+            id: productCollection.getById({ id: 1}).id,
+            quantity: 3
+        })
+        
+        expect(cart.getById({ id: 2 })?.freeQuantity).toBe(5)
+    })
+
+    it('If the item is reduced to zero, item must be removed', () => {
+        cart.add({
+            id: productCollection.getById({ id: 1}).id,
+        })
+
+        cart.update({
+            id: productCollection.getById({ id: 1}).id,
+            quantity: 0
+        })
+        
+        expect(cart.getById({ id: 1 })).toBeUndefined()
     })
 
     it('Can list all items in cart', () => {
         const toAddItems = [
             {
                 id: productCollection.getById({ id: 1 }).id,
-                quantity: 1
             },
             {
                 id: productCollection.getById({ id: 2 }).id,
-                quantity: 1
             },
             {
                 id: productCollection.getById({ id: 3 }).id,
-                quantity: 1
             }
         ]
 
         toAddItems.map(item => {
-            cart.addOrUpdate(item)
+            cart.add(item)
         })
 
-        expect(cart.getAll().map(each => ({ id: each.id, quantity: each.quantity }))).toEqual(toAddItems)
+        expect(cart.getAll().map(each => ({ id: each.id, quantity: each.quantity }))).toEqual(toAddItems.map(each => ({ id: each.id, quantity: 1 })))
     })
 
     it('Can count number of unique items in cart', () => {
         const toAddItems = [
             {
                 id: productCollection.getById({ id: 1 }).id,
-                quantity: 1
             },
             {
                 id: productCollection.getById({ id: 2 }).id,
-                quantity: 1
             },
             {
                 id: productCollection.getById({ id: 3 }).id,
-                quantity: 1
             }
         ]
 
         toAddItems.map(item => {
-            cart.addOrUpdate(item)
+            cart.add(item)
         })
 
         const uniqueItemsCount = cart.getUniqueCounts()
@@ -225,7 +306,11 @@ describe("Cart", () => {
         ]
 
         toAddItems.map(item => {
-            cart.addOrUpdate(item)
+            cart.add(item)
+            cart.update({
+                id: item.id,
+                quantity: item.quantity
+            })
         })
 
         const totalItemsCount = cart.getTotalItemsCount()
@@ -250,7 +335,11 @@ describe("Cart", () => {
         ]
 
         toAddItems.map(item => {
-            cart.addOrUpdate(item)
+            cart.add(item)
+            cart.update({
+                id: item.id,
+                quantity: item.quantity
+            })
         })
 
         const subTotalAmount = cart.getSubTotalAmount()
@@ -275,7 +364,11 @@ describe("Cart", () => {
         ]
 
         toAddItems.map(item => {
-            cart.addOrUpdate(item)
+            cart.add(item)
+            cart.update({
+                id: item.id,
+                quantity: item.quantity
+            })
         })
 
         cart.applyDiscount({
@@ -285,27 +378,6 @@ describe("Cart", () => {
         const totalAmount = cart.getTotalAmount()
 
         expect(totalAmount).toBe(1200)
-    })
-
-    it('Can apply fixed discount that exceed than cart value and get discounted total amount should be zero rather than negative value', () => {
-        const toAddItems = [
-            {
-                id: productCollection.getById({ id: 1 }).id,
-                quantity: 1
-            },
-        ]
-
-        toAddItems.map(item => {
-            cart.addOrUpdate(item)
-        })
-
-        cart.applyDiscount({
-            name: "Discount 2"
-        })
-
-        const totalAmount = cart.getTotalAmount()
-
-        expect(totalAmount).toBe(0)
     })
 
     it('Can apply percentage discount (100%) with max value (500) and get discounted total amount', () => {
@@ -325,8 +397,13 @@ describe("Cart", () => {
         ]
 
         toAddItems.map(item => {
-            cart.addOrUpdate(item)
+            cart.add(item)
+            cart.update({
+                id: item.id,
+                quantity: item.quantity
+            })
         })
+        
 
         cart.applyDiscount({
             name: "Discount 4"
@@ -354,7 +431,11 @@ describe("Cart", () => {
         ]
 
         toAddItems.map(item => {
-            cart.addOrUpdate(item)
+            cart.add(item)
+            cart.update({
+                id: item.id,
+                quantity: item.quantity
+            })
         })
 
         cart.applyDiscount({
@@ -389,7 +470,11 @@ describe("Cart", () => {
         ]
 
         toAddItems.map(item => {
-            cart.addOrUpdate(item)
+            cart.add(item)
+            cart.update({
+                id: item.id,
+                quantity: item.quantity
+            })
         })
 
         cart.destory()
@@ -397,20 +482,71 @@ describe("Cart", () => {
         expect(cart.getAll().length).toBe(0)
     })
 
-    it("Cart is Empty (Positive)", () => {
+    it("Cart is Empty", () => {
         expect(cart.isEmpty()).toBe(true)
     })
 
-    it("Cart is Empty (Negative)", () => {
-        cart.addOrUpdate({
-            id: productCollection.getById({ id: 1 }).id,
-            quantity: 1
+
+    //#endregion Positive Cases
+
+    //#region Negative Cases
+
+    it('Non-existed Product must not be able to add to cart', () => {
+        expect(() => cart.add({
+            id: 10,
+        })).toThrow()
+    })
+
+    it('Non-existed Product must not be able to update', () => {
+        expect(() => cart.update({
+            id: 10,
+            quantity: 50
+        })).toThrow()
+    })
+
+    it('Non-existed Product must not be able to delete', () => {
+        expect(() => cart.remove({
+            id: 10,
+        })).toThrow()
+    })
+
+    it('Product should not be able to updated with negative quantity', () => {
+        expect(() => cart.update({
+            id: 1,
+            quantity: -10
+        })).toThrow()
+    })
+
+    it('Can apply fixed discount that exceed than cart value and get discounted total amount should be zero rather than negative value', () => {
+        const toAddItems = [
+            {
+                id: productCollection.getById({ id: 1 }).id,
+                quantity: 1
+            },
+        ]
+
+        toAddItems.map(item => {
+            cart.add(item)
         })
 
-        expect(cart.isEmpty()).toBe(false)
+        cart.applyDiscount({
+            name: "Discount 2"
+        })
+
+        const totalAmount = cart.getTotalAmount()
+
+        expect(totalAmount).toBe(0)
     })
+
+    //#endregion Negative Cases
 
     afterEach(() => {
         cart.destory()
+        freebies.destory()
+    })
+
+    afterAll(() => {
+        productCollection.destory()
+        discountCollection.destory()
     })
 })

@@ -54,20 +54,54 @@ Tests are written using Jest. Run the test suite with:
 pnpm test
 ```
 
+## Features
+
+### Product Management
+- Product colllection with unique IDs, names, and prices
+- Add individual or bulk products to the catalog
+- Retrieve products by ID
+- Remove products from the colllection
+
+### Shopping Cart
+- Add products to cart with specified quantities
+- Update product quantities in the cart
+- Remove products from the cart
+- View cart contents with product details
+- Singleton cart pattern ensuring consistent cart state throughout the application
+- Event service for tracking cart changes
+- Automatic updates when cart contents change
+- Automatic freebie application and removal based on cart contents
+
+### Discounts
+- Two discount types: Fixed and Percentage
+  - Fixed: Apply a specific amount discount
+  - Percentage: Apply a percentage-based discount with optional maximum cap
+- Apply discounts to the cart total
+- Remove applied discounts
+- Support for discount management (add, retrieve, remove)
+
+### Freebies (Buy X Get Y)
+- Configure "Buy X Get Y" promotions where purchasing one product grants free units of another
+- Define quantities for both the qualifying product (X) and the free product (Y)
+- Automatic application of free products when qualifying products are added to cart
+- Automatic removal of freebies when qualifying products are removed
+- Freebies are marked as free and don't contribute to subtotal calculations
+- Freebies can be given based on every quantity of the buyX or only once.
+
 ## Author
 
 Kyaw Zayar Win
 
 ## To Do  
 
-- [ ] BUG: Freebies need to be actual free in the amount
-- [ ] BUG: Freebies need to be able to remove
-- [ ] BUG: Sub Total Amount shouldn't includes Freebies Amount.
+- [x] BUG: Freebies need to be actual free in the amount
+- [x] BUG: Freebies need to be able to remove
+- [x] BUG: Sub Total Amount shouldn't includes Freebies Amount.
 - [ ] BUG: Remove Discount by Name.
 - [ ] TODO: Support Multiple Discounts.
 - [ ] Enhancement: Get total price of each unique items in the cart to let user saw that how many freebies they get.
-- [ ] Enhancement: BuyX determine with quantity and getY with quantity, example, BuyX 5, GetY 2
-- [ ] Enhancement: TODO: Seperate back add and update to align with coding testing
+- [x] Enhancement: BuyX determine with quantity and getY with quantity, example, BuyX 5, GetY 2
+- [x] Enhancement: TODO: Seperate back add and update to align with coding testing
 - [ ] Enhancement: Add id checking or do lastIndexes things when creating items to reduce the conflict
 - [ ] Enhancement: Add private or public typescript
 - [ ] Refactor: Align more with OOP concept

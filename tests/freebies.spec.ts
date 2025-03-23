@@ -33,7 +33,10 @@ describe('Freebies', () => {
             },
             getY: {
                 id: 1
-            }
+            },
+            buyXQuantity: 1,
+            getYQuantity: 1,
+            once: false
         }
 
         freebiesCollection.add(freebie)
@@ -52,7 +55,10 @@ describe('Freebies', () => {
                 },
                 getY: {
                     ...productCollection.getById({ id: 1 })
-                }
+                },
+                buyXQuantity: 1,
+                getYQuantity: 1,
+                once: false
             }, 
             {
                 id: 2, 
@@ -61,7 +67,10 @@ describe('Freebies', () => {
                 },
                 getY: {
                     ...productCollection.getById({ id: 2 })
-                }
+                },
+                buyXQuantity: 1,
+                getYQuantity: 1,
+                once: false
             },
             {
                 id: 3, 
@@ -70,7 +79,10 @@ describe('Freebies', () => {
                 },
                 getY: {
                     ...productCollection.getById({ id: 3 })
-                }
+                },
+                buyXQuantity: 1,
+                getYQuantity: 1,
+                once: false
             }
         ]
 
@@ -90,7 +102,10 @@ describe('Freebies', () => {
                 },
                 getY: {
                     ...productCollection.getById({ id: 1 })
-                }
+                },
+                buyXQuantity: 1,
+                getYQuantity: 1,
+                once: false
             }, 
             {
                 id: 2, 
@@ -99,7 +114,10 @@ describe('Freebies', () => {
                 },
                 getY: {
                     ...productCollection.getById({ id: 2 })
-                }
+                },
+                buyXQuantity: 1,
+                getYQuantity: 1,
+                once: false
             }
         ])
     })
@@ -113,7 +131,10 @@ describe('Freebies', () => {
                 },
                 getY: {
                     ...productCollection.getById({ id: 1 })
-                }
+                },
+                buyXQuantity: 1,
+                getYQuantity: 1,
+                once: false
             }, 
             {
                 id: 2, 
@@ -122,7 +143,10 @@ describe('Freebies', () => {
                 },
                 getY: {
                     ...productCollection.getById({ id: 2 })
-                }
+                },
+                buyXQuantity: 1,
+                getYQuantity: 1,
+                once: false
             },
             {
                 id: 3, 
@@ -131,7 +155,10 @@ describe('Freebies', () => {
                 },
                 getY: {
                     ...productCollection.getById({ id: 3 })
-                }
+                },
+                buyXQuantity: 1,
+                getYQuantity: 1,
+                once: false
             }
         ]
 

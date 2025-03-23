@@ -1,15 +1,22 @@
 import { type Product, ProductCollection } from "./product.service";
 import Status from "../status";
+import EventService from "./events.service";
 
-class BuyXGetY {
+export class BuyXGetY {
     id: number
     buyX: Pick<Product, 'id'>
     getY: Pick<Product, 'id'>
+    buyXQuantity: number
+    getYQuantity: number
+    once: boolean
 
-    constructor({ id, buyX, getY }: BuyXGetY) {
+    constructor({ id, buyX, getY, buyXQuantity = 1, getYQuantity = 1, once = false }: BuyXGetY) {
         this.id = id;
         this.buyX = buyX; 
         this.getY = getY;
+        this.buyXQuantity = buyXQuantity;
+        this.getYQuantity = getYQuantity;
+        this.once = once;
     }
 }
 
@@ -20,6 +27,7 @@ export class FreebiesCollection {
     private productCollection = new ProductCollection()
 
     constructor() {
+       
         if (instance) return instance;
 
         instance = this
@@ -30,9 +38,9 @@ export class FreebiesCollection {
         const getY = this.productCollection.getById({ id: buyXGetY.getY.id })
 
         this.collection.push({
-            id: buyXGetY.id,
+            ...buyXGetY,
             buyX,
-            getY
+            getY,
         })
     }
 
